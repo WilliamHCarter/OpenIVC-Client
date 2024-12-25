@@ -1,6 +1,7 @@
 const rl = @import("raylib");
 const rg = @import("raygui");
 const std = @import("std");
+const RadioFreq = @import("./radio_freq.zig");
 
 // Define available themes
 const Theme = enum(i32) {
@@ -67,22 +68,18 @@ pub fn main() anyerror!void {
     @memcpy(server_ip_buf[0..9], "5.9.54.24");
     @memcpy(connection_status_buf[0..9], "Connected");
 
-    // Radio Frequencies states
-    var uhf_freq: [32]u8 = [_]u8{space} ** 32;
-    var vhf_freq: [32]u8 = [_]u8{space} ** 32;
-    @memcpy(uhf_freq[0..6], "339750");
-    @memcpy(vhf_freq[0..4], "1234");
-
-    var uhf_vol: f32 = 6.0;
-    var vhf_vol: f32 = 6.0;
-    var intercom_vol: f32 = 0.0;
-
-    // Checkbox states
-    var uhf_active = false;
-    var vhf_active = false;
-    var force_local = false;
-    var agc_enabled = false;
-    var guard_active = false;
+    var radio_state = RadioFreq.RadioState{
+        .uhf_freq = [_]u8{32} ** 32,
+        .vhf_freq = [_]u8{32} ** 32,
+        .uhf_vol = 6.0,
+        .vhf_vol = 6.0,
+        .intercom_vol = 0.0,
+        .uhf_active = false,
+        .vhf_active = false,
+        .force_local = false,
+        .agc_enabled = false,
+        .guard_active = false,
+    };
 
     // Sound device dropdowns
     var capture_device_index: i32 = 0;
@@ -100,12 +97,12 @@ pub fn main() anyerror!void {
 
         // Base dimensions
         const margin = @as(i32, @intFromFloat(10.0 * scale));
-        const groupWidth = @as(i32, @intFromFloat(600.0 * scale));
-        const elementHeight = @as(i32, @intFromFloat(25.0 * scale));
-        const labelWidth = @as(i32, @intFromFloat(100.0 * scale));
-        const inputWidth = @as(i32, @intFromFloat(200.0 * scale));
-        const buttonWidth = @as(i32, @intFromFloat(100.0 * scale));
-        const groupPadding = @as(i32, @intFromFloat(20.0 * scale));
+        const group_width = @as(i32, @intFromFloat(600.0 * scale));
+        const element_height = @as(i32, @intFromFloat(25.0 * scale));
+        const label_width = @as(i32, @intFromFloat(100.0 * scale));
+        const input_width = @as(i32, @intFromFloat(200.0 * scale));
+        const button_width = @as(i32, @intFromFloat(100.0 * scale));
+        const group_padding = @as(i32, @intFromFloat(20.0 * scale));
         const freq_width = @as(i32, @intFromFloat(60.0 * scale));
 
         // Theme handling
@@ -140,75 +137,55 @@ pub fn main() anyerror!void {
         // Server Connection Group
         const serverGroupY = margin * 4;
         _ = rg.guiGroupBox(.{
-            .x = @floatFromInt(@divTrunc((currentWidth - groupWidth), 2)),
+            .x = @floatFromInt(@divTrunc((currentWidth - group_width), 2)),
             .y = @floatFromInt(serverGroupY),
-            .width = @floatFromInt(groupWidth),
+            .width = @floatFromInt(group_width),
             .height = 130.0 * scale,
         }, "Server Connection");
 
-        const baseX = @divFloor(currentWidth - groupWidth, 2) + groupPadding;
-        var currentY = serverGroupY + groupPadding;
+        const baseX = @divFloor(currentWidth - group_width, 2) + group_padding;
+        var currentY = serverGroupY + group_padding;
 
         // Server connection controls
-        _ = rg.guiLabel(.{ .x = @floatFromInt(baseX), .y = @floatFromInt(currentY), .width = @floatFromInt(labelWidth), .height = @floatFromInt(elementHeight) }, "Nickname:");
-        _ = rg.guiTextBox(.{ .x = @floatFromInt(baseX + labelWidth), .y = @floatFromInt(currentY), .width = @floatFromInt(inputWidth), .height = @floatFromInt(elementHeight) }, @ptrCast(&nickname_buf), 14, true);
-        currentY += elementHeight + margin;
+        _ = rg.guiLabel(.{ .x = @floatFromInt(baseX), .y = @floatFromInt(currentY), .width = @floatFromInt(label_width), .height = @floatFromInt(element_height) }, "Nickname:");
+        _ = rg.guiTextBox(.{ .x = @floatFromInt(baseX + label_width), .y = @floatFromInt(currentY), .width = @floatFromInt(input_width), .height = @floatFromInt(element_height) }, @ptrCast(&nickname_buf), 14, true);
+        currentY += element_height + margin;
 
-        _ = rg.guiLabel(.{ .x = @floatFromInt(baseX), .y = @floatFromInt(currentY), .width = @floatFromInt(labelWidth), .height = @floatFromInt(elementHeight) }, "Server IP/DNS:");
-        _ = rg.guiTextBox(.{ .x = @floatFromInt(baseX + labelWidth), .y = @floatFromInt(currentY), .width = @floatFromInt(inputWidth), .height = @floatFromInt(elementHeight) }, @ptrCast(&server_ip_buf), 14, true);
-        currentY += elementHeight + margin;
+        _ = rg.guiLabel(.{ .x = @floatFromInt(baseX), .y = @floatFromInt(currentY), .width = @floatFromInt(label_width), .height = @floatFromInt(element_height) }, "Server IP/DNS:");
+        _ = rg.guiTextBox(.{ .x = @floatFromInt(baseX + label_width), .y = @floatFromInt(currentY), .width = @floatFromInt(input_width), .height = @floatFromInt(element_height) }, @ptrCast(&server_ip_buf), 14, true);
+        currentY += element_height + margin;
 
-        _ = rg.guiLabel(.{ .x = @floatFromInt(baseX), .y = @floatFromInt(currentY), .width = @floatFromInt(labelWidth), .height = @floatFromInt(elementHeight) }, "Connection Status:");
-        _ = rg.guiTextBox(.{ .x = @floatFromInt(baseX + labelWidth), .y = @floatFromInt(currentY), .width = @floatFromInt(inputWidth), .height = @floatFromInt(elementHeight) }, @ptrCast(&connection_status_buf), 14, false);
-        _ = rg.guiButton(.{ .x = @floatFromInt(baseX + labelWidth + inputWidth + margin), .y = @floatFromInt(currentY), .width = @floatFromInt(buttonWidth), .height = @floatFromInt(elementHeight) }, "Disconnect");
+        _ = rg.guiLabel(.{ .x = @floatFromInt(baseX), .y = @floatFromInt(currentY), .width = @floatFromInt(label_width), .height = @floatFromInt(element_height) }, "Connection Status:");
+        _ = rg.guiTextBox(.{ .x = @floatFromInt(baseX + label_width), .y = @floatFromInt(currentY), .width = @floatFromInt(input_width), .height = @floatFromInt(element_height) }, @ptrCast(&connection_status_buf), 14, false);
+        _ = rg.guiButton(.{ .x = @floatFromInt(baseX + label_width + input_width + margin), .y = @floatFromInt(currentY), .width = @floatFromInt(button_width), .height = @floatFromInt(element_height) }, "Disconnect");
 
-        // Radio Frequencies Group
-        const radioGroupY = currentY + 8 + elementHeight + margin * 2;
-        _ = rg.guiGroupBox(.{
-            .x = @floatFromInt(@divTrunc((currentWidth - groupWidth), 2)),
-            .y = @floatFromInt(radioGroupY),
-            .width = @floatFromInt(groupWidth),
-            .height = 160.0 * scale,
-        }, "Radio Frequencies");
+        const radio_config = RadioFreq.DrawConfig{
+            .base_x = baseX,
+            .start_y = currentY,
+            .group_width = group_width,
+            .element_height = element_height,
+            .freq_width = freq_width,
+            .button_width = button_width,
+            .margin = margin,
+            .scale = scale,
+        };
 
-        currentY = radioGroupY + groupPadding;
-
-        // UHF Row
-        _ = rg.guiLabel(.{ .x = @floatFromInt(baseX), .y = @floatFromInt(currentY), .width = @floatFromInt(freq_width), .height = @floatFromInt(elementHeight) }, "UHF Freq:");
-        _ = rg.guiTextBox(.{ .x = @floatFromInt(baseX + freq_width), .y = @floatFromInt(currentY), .width = @floatFromInt(2 * freq_width), .height = @floatFromInt(elementHeight) }, @ptrCast(&uhf_freq), 14, true);
-        _ = rg.guiButton(.{ .x = @floatFromInt(baseX + freq_width + 2 * freq_width + margin), .y = @floatFromInt(currentY), .width = @floatFromInt(buttonWidth), .height = @floatFromInt(elementHeight) }, "Change FRQ");
-        _ = rg.guiSlider(.{ .x = @floatFromInt(baseX + freq_width + 2 * freq_width + buttonWidth + 20 + margin * 2), .y = @floatFromInt(currentY), .width = @floatFromInt(100), .height = @floatFromInt(elementHeight) }, "Vol:", "", &uhf_vol, 0, 10);
-        _ = rg.guiCheckBox(.{ .x = @floatFromInt(baseX + groupWidth - 200), .y = @floatFromInt(currentY), .width = @floatFromInt(20), .height = @floatFromInt(elementHeight) }, "UHF Active (F1)", &uhf_active);
-        currentY += elementHeight + margin;
-
-        // VHF Row
-        _ = rg.guiLabel(.{ .x = @floatFromInt(baseX), .y = @floatFromInt(currentY), .width = @floatFromInt(freq_width), .height = @floatFromInt(elementHeight) }, "VHF Freq:");
-        _ = rg.guiTextBox(.{ .x = @floatFromInt(baseX + freq_width), .y = @floatFromInt(currentY), .width = @floatFromInt(2 * freq_width), .height = @floatFromInt(elementHeight) }, @ptrCast(&vhf_freq), 14, true);
-        _ = rg.guiButton(.{ .x = @floatFromInt(baseX + freq_width + 2 * freq_width + margin), .y = @floatFromInt(currentY), .width = @floatFromInt(buttonWidth), .height = @floatFromInt(elementHeight) }, "Change FRQ");
-        _ = rg.guiSlider(.{ .x = @floatFromInt(baseX + freq_width + 2 * freq_width + buttonWidth + 20 + margin * 2), .y = @floatFromInt(currentY), .width = @floatFromInt(100), .height = @floatFromInt(elementHeight) }, "Vol:", "", &vhf_vol, 0, 10);
-        _ = rg.guiCheckBox(.{ .x = @floatFromInt(baseX + groupWidth - 200), .y = @floatFromInt(currentY), .width = @floatFromInt(20), .height = @floatFromInt(elementHeight) }, "VHF Active (F2)", &vhf_active);
-        currentY += elementHeight + margin;
-
-        // Control Row
-        _ = rg.guiCheckBox(.{ .x = @floatFromInt(baseX), .y = @floatFromInt(currentY), .width = @floatFromInt(20), .height = @floatFromInt(elementHeight) }, "Force Local Control", &force_local);
-        _ = rg.guiCheckBox(.{ .x = @floatFromInt(baseX + 150), .y = @floatFromInt(currentY), .width = @floatFromInt(20), .height = @floatFromInt(elementHeight) }, "AGC", &agc_enabled);
-        _ = rg.guiSlider(.{ .x = @floatFromInt(baseX + 280), .y = @floatFromInt(currentY), .width = @floatFromInt(100), .height = @floatFromInt(elementHeight) }, "Intercom Vol:", "", &intercom_vol, 0, 10);
-        _ = rg.guiCheckBox(.{ .x = @floatFromInt(baseX + groupWidth - 200), .y = @floatFromInt(currentY), .width = @floatFromInt(20), .height = @floatFromInt(elementHeight) }, "GUARD Active (F3)", &guard_active);
+        currentY = RadioFreq.drawRadioGroup(&radio_state, radio_config);
 
         // Sound Devices Group
-        const soundGroupY = currentY + elementHeight + margin * 2;
+        const soundGroupY = currentY + element_height + margin * 2;
         _ = rg.guiGroupBox(.{
-            .x = @floatFromInt(@divTrunc((currentWidth - groupWidth), 2)),
+            .x = @floatFromInt(@divTrunc((currentWidth - group_width), 2)),
             .y = @floatFromInt(soundGroupY),
-            .width = @floatFromInt(groupWidth),
+            .width = @floatFromInt(group_width),
             .height = 100.0 * scale,
         }, "Sound Devices");
 
-        currentY = soundGroupY + groupPadding;
+        currentY = soundGroupY + group_padding;
 
         // Sound device dropdowns
-        _ = rg.guiLabel(.{ .x = @floatFromInt(baseX), .y = @floatFromInt(currentY), .width = @floatFromInt(labelWidth), .height = @floatFromInt(elementHeight) }, "Capture:");
-        const inputDropdownBounds = rl.Rectangle{ .x = @floatFromInt(baseX), .y = @floatFromInt(currentY + elementHeight), .width = @floatFromInt(@divTrunc(groupWidth, 2) - margin * 2), .height = @floatFromInt(elementHeight) };
+        _ = rg.guiLabel(.{ .x = @floatFromInt(baseX), .y = @floatFromInt(currentY), .width = @floatFromInt(label_width), .height = @floatFromInt(element_height) }, "Capture:");
+        const inputDropdownBounds = rl.Rectangle{ .x = @floatFromInt(baseX), .y = @floatFromInt(currentY + element_height), .width = @floatFromInt(@divTrunc(group_width, 2) - margin * 2), .height = @floatFromInt(element_height) };
         // Draw the dropdown box and get the result
         const in_res = rg.guiDropdownBox(inputDropdownBounds, "Analogue 1+2;USB Device 1;Default Input", &capture_device_index, input_dropdown_open);
 
@@ -217,8 +194,8 @@ pub fn main() anyerror!void {
             input_dropdown_open = !input_dropdown_open;
         }
 
-        _ = rg.guiLabel(.{ .x = @floatFromInt(baseX + @divTrunc(groupWidth, 2)), .y = @floatFromInt(currentY), .width = @floatFromInt(labelWidth), .height = @floatFromInt(elementHeight) }, "Playback:");
-        const outputDropdownBounds = rl.Rectangle{ .x = @floatFromInt(baseX + @divTrunc(groupWidth, 2)), .y = @floatFromInt(currentY + elementHeight), .width = @floatFromInt(@divTrunc(groupWidth, 2) - margin * 2), .height = @floatFromInt(elementHeight) };
+        _ = rg.guiLabel(.{ .x = @floatFromInt(baseX + @divTrunc(group_width, 2)), .y = @floatFromInt(currentY), .width = @floatFromInt(label_width), .height = @floatFromInt(element_height) }, "Playback:");
+        const outputDropdownBounds = rl.Rectangle{ .x = @floatFromInt(baseX + @divTrunc(group_width, 2)), .y = @floatFromInt(currentY + element_height), .width = @floatFromInt(@divTrunc(group_width, 2) - margin * 2), .height = @floatFromInt(element_height) };
         // Draw the dropdown box and get the result
         const out_res = rg.guiDropdownBox(outputDropdownBounds, "Default Output;Speakers;Headphones", &playback_device_index, output_dropdown_open);
 
