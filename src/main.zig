@@ -2,6 +2,7 @@ const rl = @import("raylib");
 const rg = @import("raygui");
 const std = @import("std");
 const ServerConnection = @import("server_connection.zig");
+const SoundDevices = @import("sound_devices.zig");
 // Define available themes
 const Theme = enum(i32) {
     Default = 0,
@@ -55,8 +56,6 @@ pub fn main() anyerror!void {
     var theme_index: i32 = 0;
     var previous_theme_index: i32 = -1;
     var theme_dropdown_open = false;
-    var input_dropdown_open = false;
-    var output_dropdown_open = false;
 
     // Server Connection states
     const space: u8 = 32;
@@ -90,9 +89,12 @@ pub fn main() anyerror!void {
     var guard_active = false;
 
     // Sound device dropdowns
-    var capture_device_index: i32 = 0;
-    var playback_device_index: i32 = 0;
-
+    var sound_state = SoundDevices.SoundState{
+        .capture_device_index = 0,
+        .playback_device_index = 0,
+        .input_dropdown_open = false,
+        .output_dropdown_open = false,
+    };
     // Load initial theme
     loadTheme(.Default);
 
@@ -193,35 +195,16 @@ pub fn main() anyerror!void {
         _ = rg.guiCheckBox(.{ .x = @floatFromInt(base_x + group_width - 200), .y = @floatFromInt(current_y), .width = @floatFromInt(20), .height = @floatFromInt(element_height) }, "GUARD Active (F3)", &guard_active);
 
         // Sound Devices Group
-        const soundGroupY = current_y + element_height + margin * 2;
-        _ = rg.guiGroupBox(.{
-            .x = @floatFromInt(@divTrunc((currentWidth - group_width), 2)),
-            .y = @floatFromInt(soundGroupY),
-            .width = @floatFromInt(group_width),
-            .height = 100.0 * scale,
-        }, "Sound Devices");
+        const sound_config = SoundDevices.DrawConfig{
+            .base_x = base_x,
+            .start_y = current_y,
+            .group_width = group_width,
+            .element_height = element_height,
+            .label_width = label_width,
+            .margin = margin,
+            .scale = scale,
+        };
 
-        current_y = soundGroupY + group_padding;
-
-        // Sound device dropdowns
-        _ = rg.guiLabel(.{ .x = @floatFromInt(base_x), .y = @floatFromInt(current_y), .width = @floatFromInt(label_width), .height = @floatFromInt(element_height) }, "Capture:");
-        const inputDropdownBounds = rl.Rectangle{ .x = @floatFromInt(base_x), .y = @floatFromInt(current_y + element_height), .width = @floatFromInt(@divTrunc(group_width, 2) - margin * 2), .height = @floatFromInt(element_height) };
-        // Draw the dropdown box and get the result
-        const in_res = rg.guiDropdownBox(inputDropdownBounds, "Analogue 1+2;USB Device 1;Default Input", &capture_device_index, input_dropdown_open);
-
-        // Toggle the dropdown edit mode on click
-        if (in_res == 1) {
-            input_dropdown_open = !input_dropdown_open;
-        }
-
-        _ = rg.guiLabel(.{ .x = @floatFromInt(base_x + @divTrunc(group_width, 2)), .y = @floatFromInt(current_y), .width = @floatFromInt(label_width), .height = @floatFromInt(element_height) }, "Playback:");
-        const outputDropdownBounds = rl.Rectangle{ .x = @floatFromInt(base_x + @divTrunc(group_width, 2)), .y = @floatFromInt(current_y + element_height), .width = @floatFromInt(@divTrunc(group_width, 2) - margin * 2), .height = @floatFromInt(element_height) };
-        // Draw the dropdown box and get the result
-        const out_res = rg.guiDropdownBox(outputDropdownBounds, "Default Output;Speakers;Headphones", &playback_device_index, output_dropdown_open);
-
-        // Toggle the dropdown edit mode on click
-        if (out_res == 1) {
-            output_dropdown_open = !output_dropdown_open;
-        }
+        current_y = SoundDevices.drawSoundGroup(&sound_state, sound_config);
     }
 }
