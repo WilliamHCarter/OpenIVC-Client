@@ -21,8 +21,8 @@ pub const DrawConfig = struct {
 };
 pub fn drawServerGroup(state: *ServerState, config: DrawConfig) void {
     var label_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x, config.start_y, config.group_width, config.element_height);
-    var text_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.label_width, config.start_y, config.input_width, config.element_height);
-    const button_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.label_width + config.input_width + config.margin, config.start_y + 2 * (config.element_height + config.margin), config.button_width, config.element_height);
+    var text_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.label_width * 1.4, config.start_y, config.input_width, config.element_height);
+    const button_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.label_width * 1.4 + config.input_width + config.margin, config.start_y + 2 * (config.element_height + config.margin), config.button_width, config.element_height);
 
     _ = rg.guiGroupBox(.{
         .x = (@as(f32, @floatFromInt(rl.getScreenWidth())) - config.group_width) / 2,

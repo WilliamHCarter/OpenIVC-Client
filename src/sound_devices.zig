@@ -39,7 +39,7 @@ pub fn drawSoundGroup(state: *SoundState, config: DrawConfig) void {
     const input_dropdown_bounds = rl.Rectangle{
         .x = @floatFromInt(config.base_x),
         .y = @floatFromInt(current_y + config.element_height),
-        .width = @floatFromInt(@divTrunc(config.group_width, 2) - config.margin * 2),
+        .width = @floatFromInt(@divTrunc(config.group_width, 2) - config.margin * 3),
         .height = @floatFromInt(config.element_height),
     };
 
@@ -54,9 +54,9 @@ pub fn drawSoundGroup(state: *SoundState, config: DrawConfig) void {
 
     // Playback dropdown
     const output_dropdown_bounds = rl.Rectangle{
-        .x = @floatFromInt(config.base_x + @divTrunc(config.group_width, 2)),
+        .x = @floatFromInt(config.base_x + @divTrunc(config.group_width, 2) - config.margin),
         .y = @floatFromInt(current_y + config.element_height),
-        .width = @floatFromInt(@divTrunc(config.group_width, 2) - config.margin * 2),
+        .width = @floatFromInt(@divTrunc(config.group_width, 2) - config.margin * 3),
         .height = @floatFromInt(config.element_height),
     };
 

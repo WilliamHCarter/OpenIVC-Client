@@ -111,7 +111,9 @@ pub fn main() anyerror!void {
         const input_width = @as(i32, @intFromFloat(200.0 * scale));
         const button_width = @as(i32, @intFromFloat(100.0 * scale));
         const group_padding = @as(i32, @intFromFloat(20.0 * scale));
-        const freq_width = @as(i32, @intFromFloat(60.0 * scale));
+        const freq_width = @as(i32, @intFromFloat(80.0 * scale));
+        rg.guiSetStyle(rg.GuiControl.default, @intFromEnum(rg.GuiDefaultProperty.text_size), @intFromFloat(@max(14 * scale, 8)));
+        rg.guiSetStyle(rg.GuiControl.default, @intFromEnum(rg.GuiDefaultProperty.text_spacing), @intFromFloat(@max(1 * scale, 1)));
 
         // Theme handling
         if (theme_index != previous_theme_index) {

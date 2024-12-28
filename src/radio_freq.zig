@@ -28,10 +28,11 @@ pub const DrawConfig = struct {
 // Returns the final Y position after drawing
 pub fn drawRadioGroup(state: *RadioState, config: DrawConfig) void {
     var current_y = config.start_y;
-    var slider_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.freq_width + 2.0 * config.freq_width + config.button_width + 20.0 + config.margin * 2.0, current_y, 100.0, config.element_height);
-    var checkbox_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.group_width - 160.0, current_y, 20.0, config.element_height);
-    var textbox_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.freq_width, current_y, 2.0 * config.freq_width, config.element_height);
-    var button_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.freq_width + 2.0 * config.freq_width + config.margin, current_y, config.button_width, config.element_height);
+    var textbox_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.freq_width, current_y, 1.6 * config.freq_width, config.element_height);
+    var button_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.freq_width + (1.6 * config.freq_width) + config.margin, current_y, config.button_width, config.element_height);
+    var slider_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.freq_width + (1.6 * config.freq_width) + config.button_width + (30.0 * config.scale) + (config.margin * 2.0), current_y, 60.0 * config.scale, config.element_height);
+    var checkbox_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.group_width - (170.0 * config.scale), current_y, config.element_height, config.element_height);
+
     // Draw the group box
     _ = rg.guiGroupBox(.{
         .x = (@as(f32, @floatFromInt(rl.getScreenWidth())) - config.group_width) / 2,
@@ -76,23 +77,23 @@ pub fn drawRadioGroup(state: *RadioState, config: DrawConfig) void {
     _ = rg.guiCheckBox(.{
         .x = config.base_x,
         .y = current_y,
-        .width = 20.0,
+        .width = config.element_height,
         .height = config.element_height,
     }, "Force Local Control", &state.force_local);
 
     _ = rg.guiCheckBox(.{
-        .x = config.base_x + 150.0,
+        .x = config.base_x + (180.0 * config.scale),
         .y = current_y,
-        .width = 20.0,
+        .width = config.element_height,
         .height = config.element_height,
     }, "AGC", &state.agc_enabled);
 
     _ = rg.guiSlider(slider_bounds, "Intercom Vol:", "", &state.intercom_vol, 0, 10);
 
     _ = rg.guiCheckBox(.{
-        .x = config.base_x + config.group_width - 160.0,
+        .x = config.base_x + config.group_width - (170.0 * config.scale),
         .y = current_y,
-        .width = 20.0,
+        .width = config.element_height,
         .height = config.element_height,
     }, "GUARD Active (F3)", &state.guard_active);
 }
