@@ -9,37 +9,40 @@ pub const ServerState = struct {
 };
 
 pub const DrawConfig = struct {
-    base_x: i32,
-    start_y: i32,
-    group_width: i32,
-    element_height: i32,
-    label_width: i32,
-    input_width: i32,
-    button_width: i32,
-    margin: i32,
+    base_x: f32,
+    start_y: f32,
+    group_width: f32,
+    element_height: f32,
+    label_width: f32,
+    input_width: f32,
+    button_width: f32,
+    margin: f32,
     scale: f32,
 };
-
 pub fn drawServerGroup(state: *ServerState, config: DrawConfig) void {
-    var current_y = config.start_y;
-    const serverGroupY = config.margin * 4;
+    var label_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x, config.start_y, config.group_width, config.element_height);
+    var text_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.label_width, config.start_y, config.input_width, config.element_height);
+    const button_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.label_width + config.input_width + config.margin, config.start_y + 2 * (config.element_height + config.margin), config.button_width, config.element_height);
+
     _ = rg.guiGroupBox(.{
-        .x = @floatFromInt(@divTrunc((rl.getScreenWidth() - config.group_width), 2)),
-        .y = @floatFromInt(serverGroupY),
-        .width = @floatFromInt(config.group_width),
+        .x = (@as(f32, @floatFromInt(rl.getScreenWidth())) - config.group_width) / 2,
+        .y = config.margin * 4,
+        .width = config.group_width,
         .height = 130.0 * config.scale,
     }, "Server Connection");
 
     // Server connection controls
-    _ = rg.guiLabel(.{ .x = @floatFromInt(config.base_x), .y = @floatFromInt(current_y), .width = @floatFromInt(config.label_width), .height = @floatFromInt(config.element_height) }, "Nickname:");
-    _ = rg.guiTextBox(.{ .x = @floatFromInt(config.base_x + config.label_width), .y = @floatFromInt(current_y), .width = @floatFromInt(config.input_width), .height = @floatFromInt(config.element_height) }, @ptrCast(&state.nickname_buf), 14, true);
-    current_y += config.element_height + config.margin;
+    _ = rg.guiLabel(label_bounds, "Nickname:");
+    _ = rg.guiTextBox(text_bounds, @ptrCast(&state.nickname_buf), 14, true);
+    label_bounds.y += config.element_height + config.margin;
+    text_bounds.y += config.element_height + config.margin;
 
-    _ = rg.guiLabel(.{ .x = @floatFromInt(config.base_x), .y = @floatFromInt(current_y), .width = @floatFromInt(config.label_width), .height = @floatFromInt(config.element_height) }, "Server IP/DNS:");
-    _ = rg.guiTextBox(.{ .x = @floatFromInt(config.base_x + config.label_width), .y = @floatFromInt(current_y), .width = @floatFromInt(config.input_width), .height = @floatFromInt(config.element_height) }, @ptrCast(&state.server_ip_buf), 14, true);
-    current_y += config.element_height + config.margin;
+    _ = rg.guiLabel(label_bounds, "Server IP/DNS:");
+    _ = rg.guiTextBox(text_bounds, @ptrCast(&state.server_ip_buf), 14, true);
+    label_bounds.y += config.element_height + config.margin;
+    text_bounds.y += config.element_height + config.margin;
 
-    _ = rg.guiLabel(.{ .x = @floatFromInt(config.base_x), .y = @floatFromInt(current_y), .width = @floatFromInt(config.label_width), .height = @floatFromInt(config.element_height) }, "Connection Status:");
-    _ = rg.guiTextBox(.{ .x = @floatFromInt(config.base_x + config.label_width), .y = @floatFromInt(current_y), .width = @floatFromInt(config.input_width), .height = @floatFromInt(config.element_height) }, @ptrCast(&state.connection_status_buf), 14, false);
-    _ = rg.guiButton(.{ .x = @floatFromInt(config.base_x + config.label_width + config.input_width + config.margin), .y = @floatFromInt(current_y), .width = @floatFromInt(config.button_width), .height = @floatFromInt(config.element_height) }, "Disconnect");
+    _ = rg.guiLabel(label_bounds, "Connection Status:");
+    _ = rg.guiTextBox(text_bounds, @ptrCast(&state.connection_status_buf), 14, false);
+    _ = rg.guiButton(button_bounds, "Disconnect");
 }

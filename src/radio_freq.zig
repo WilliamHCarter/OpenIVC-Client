@@ -15,95 +15,84 @@ pub const RadioState = struct {
 };
 
 pub const DrawConfig = struct {
-    base_x: i32,
-    start_y: i32,
-    group_width: i32,
-    element_height: i32,
-    freq_width: i32,
-    button_width: i32,
-    margin: i32,
+    base_x: f32,
+    start_y: f32,
+    group_width: f32,
+    element_height: f32,
+    freq_width: f32,
+    button_width: f32,
+    margin: f32,
     scale: f32,
 };
 
 // Returns the final Y position after drawing
-pub fn drawRadioGroup(state: *RadioState, config: DrawConfig) i32 {
+pub fn drawRadioGroup(state: *RadioState, config: DrawConfig) void {
     var current_y = config.start_y;
-
+    var slider_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.freq_width + 2.0 * config.freq_width + config.button_width + 20.0 + config.margin * 2.0, current_y, 100.0, config.element_height);
+    var checkbox_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.group_width - 160.0, current_y, 20.0, config.element_height);
+    var textbox_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.freq_width, current_y, 2.0 * config.freq_width, config.element_height);
+    var button_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.freq_width + 2.0 * config.freq_width + config.margin, current_y, config.button_width, config.element_height);
     // Draw the group box
     _ = rg.guiGroupBox(.{
-        .x = @floatFromInt(config.base_x),
-        .y = @floatFromInt(current_y),
-        .width = @floatFromInt(config.group_width),
+        .x = (@as(f32, @floatFromInt(rl.getScreenWidth())) - config.group_width) / 2,
+        .y = current_y,
+        .width = config.group_width,
         .height = 160.0 * config.scale,
     }, "Radio Frequencies");
 
-    current_y += @as(i32, @intFromFloat(20.0 * config.scale)); // Group padding
+    current_y += 20.0 * config.scale; // Group padding
+    slider_bounds.y = current_y;
+    checkbox_bounds.y = current_y;
+    textbox_bounds.y = current_y;
+    button_bounds.y = current_y;
 
     // UHF Row
-    _ = rg.guiLabel(.{ .x = @floatFromInt(config.base_x), .y = @floatFromInt(current_y), .width = @floatFromInt(config.freq_width), .height = @floatFromInt(config.element_height) }, "UHF Freq:");
-    _ = rg.guiTextBox(.{
-        .x = @floatFromInt(config.base_x + config.freq_width),
-        .y = @floatFromInt(current_y),
-        .width = @floatFromInt(2 * config.freq_width),
-        .height = @floatFromInt(config.element_height),
-    }, @ptrCast(&state.uhf_freq), 14, true);
-    _ = rg.guiButton(.{
-        .x = @floatFromInt(config.base_x + config.freq_width + 2 * config.freq_width + config.margin),
-        .y = @floatFromInt(current_y),
-        .width = @floatFromInt(config.button_width),
-        .height = @floatFromInt(config.element_height),
-    }, "Change FRQ");
-    _ = rg.guiSlider(.{
-        .x = @floatFromInt(config.base_x + config.freq_width + 2 * config.freq_width + config.button_width + 20 + config.margin * 2),
-        .y = @floatFromInt(current_y),
-        .width = @floatFromInt(100),
-        .height = @floatFromInt(config.element_height),
-    }, "Vol:", "", &state.uhf_vol, 0, 10);
-    _ = rg.guiCheckBox(.{
-        .x = @floatFromInt(config.base_x + config.group_width - 200),
-        .y = @floatFromInt(current_y),
-        .width = @floatFromInt(20),
-        .height = @floatFromInt(config.element_height),
-    }, "UHF Active (F1)", &state.uhf_active);
+    _ = rg.guiLabel(.{ .x = config.base_x, .y = current_y, .width = config.freq_width, .height = config.element_height }, "UHF Freq:");
+    _ = rg.guiTextBox(textbox_bounds, @ptrCast(&state.uhf_freq), 14, true);
+    _ = rg.guiButton(button_bounds, "Change FRQ");
+    _ = rg.guiSlider(slider_bounds, "Vol:", "", &state.uhf_vol, 0, 10);
+    _ = rg.guiCheckBox(checkbox_bounds, "UHF Active (F1)", &state.uhf_active);
 
     current_y += config.element_height + config.margin;
+    slider_bounds.y = current_y;
+    checkbox_bounds.y = current_y;
+    textbox_bounds.y = current_y;
+    button_bounds.y = current_y;
 
     // VHF Row
-    _ = rg.guiLabel(.{ .x = @floatFromInt(config.base_x), .y = @floatFromInt(current_y), .width = @floatFromInt(config.freq_width), .height = @floatFromInt(config.element_height) }, "VHF Freq:");
-    _ = rg.guiTextBox(.{ .x = @floatFromInt(config.base_x + config.freq_width), .y = @floatFromInt(current_y), .width = @floatFromInt(2 * config.freq_width), .height = @floatFromInt(config.element_height) }, @ptrCast(&state.vhf_freq), 14, true);
-    _ = rg.guiButton(.{ .x = @floatFromInt(config.base_x + config.freq_width + 2 * config.freq_width + config.margin), .y = @floatFromInt(current_y), .width = @floatFromInt(config.button_width), .height = @floatFromInt(config.element_height) }, "Change FRQ");
-    _ = rg.guiSlider(.{ .x = @floatFromInt(config.base_x + config.freq_width + 2 * config.freq_width + config.button_width + 20 + config.margin * 2), .y = @floatFromInt(current_y), .width = @floatFromInt(100), .height = @floatFromInt(config.element_height) }, "Vol:", "", &state.vhf_vol, 0, 10);
-    _ = rg.guiCheckBox(.{ .x = @floatFromInt(config.base_x + config.group_width - 200), .y = @floatFromInt(current_y), .width = @floatFromInt(20), .height = @floatFromInt(config.element_height) }, "VHF Active (F2)", &state.vhf_active);
+    _ = rg.guiLabel(.{ .x = config.base_x, .y = current_y, .width = config.freq_width, .height = config.element_height }, "VHF Freq:");
+    _ = rg.guiTextBox(textbox_bounds, @ptrCast(&state.vhf_freq), 14, true);
+    _ = rg.guiButton(button_bounds, "Change FRQ");
+    _ = rg.guiSlider(slider_bounds, "Vol:", "", &state.vhf_vol, 0, 10);
+    _ = rg.guiCheckBox(checkbox_bounds, "VHF Active (F2)", &state.vhf_active);
+
     current_y += config.element_height + config.margin;
+    slider_bounds.y = current_y;
+    checkbox_bounds.y = current_y;
+    textbox_bounds.y = current_y;
+    button_bounds.y = current_y;
 
     // Control Row
     _ = rg.guiCheckBox(.{
-        .x = @floatFromInt(config.base_x),
-        .y = @floatFromInt(current_y),
-        .width = @floatFromInt(20),
-        .height = @floatFromInt(config.element_height),
+        .x = config.base_x,
+        .y = current_y,
+        .width = 20.0,
+        .height = config.element_height,
     }, "Force Local Control", &state.force_local);
 
     _ = rg.guiCheckBox(.{
-        .x = @floatFromInt(config.base_x + 150),
-        .y = @floatFromInt(current_y),
-        .width = @floatFromInt(20),
-        .height = @floatFromInt(config.element_height),
+        .x = config.base_x + 150.0,
+        .y = current_y,
+        .width = 20.0,
+        .height = config.element_height,
     }, "AGC", &state.agc_enabled);
 
-    _ = rg.guiSlider(.{
-        .x = @floatFromInt(config.base_x + 280),
-        .y = @floatFromInt(current_y),
-        .width = @floatFromInt(100),
-        .height = @floatFromInt(config.element_height),
-    }, "Intercom Vol:", "", &state.intercom_vol, 0, 10);
+    _ = rg.guiSlider(slider_bounds, "Intercom Vol:", "", &state.intercom_vol, 0, 10);
 
     _ = rg.guiCheckBox(.{
-        .x = @floatFromInt(config.base_x + config.group_width - 200),
-        .y = @floatFromInt(current_y),
-        .width = @floatFromInt(20),
-        .height = @floatFromInt(config.element_height),
+        .x = config.base_x + config.group_width - 160.0,
+        .y = current_y,
+        .width = 20.0,
+        .height = config.element_height,
     }, "GUARD Active (F3)", &state.guard_active);
-
-    return current_y + config.element_height + config.margin;
 }
