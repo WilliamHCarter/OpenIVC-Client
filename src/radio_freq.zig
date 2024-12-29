@@ -30,8 +30,8 @@ pub fn drawRadioGroup(state: *RadioState, config: DrawConfig) void {
     var current_y = config.start_y;
     var textbox_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.freq_width, current_y, 1.6 * config.freq_width, config.element_height);
     var button_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.freq_width + (1.6 * config.freq_width) + config.margin, current_y, config.button_width, config.element_height);
-    var slider_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.freq_width + (1.6 * config.freq_width) + config.button_width + (30.0 * config.scale) + (config.margin * 2.0), current_y, 60.0 * config.scale, config.element_height);
-    var checkbox_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.group_width - (170.0 * config.scale), current_y, config.element_height, config.element_height);
+    var slider_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.freq_width + (1.6 * config.freq_width) + config.button_width + (25.0 * config.scale) + (config.margin * 2.0), current_y, 60.0 * config.scale, config.element_height);
+    var checkbox_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.group_width - (175.0 * config.scale), current_y, config.element_height, config.element_height);
 
     // Draw the group box
     _ = rg.guiGroupBox(.{
@@ -91,7 +91,7 @@ pub fn drawRadioGroup(state: *RadioState, config: DrawConfig) void {
     _ = rg.guiSlider(slider_bounds, "Intercom Vol:", "", &state.intercom_vol, 0, 10);
 
     _ = rg.guiCheckBox(.{
-        .x = config.base_x + config.group_width - (170.0 * config.scale),
+        .x = config.base_x + config.group_width - (175.0 * config.scale),
         .y = current_y,
         .width = config.element_height,
         .height = config.element_height,

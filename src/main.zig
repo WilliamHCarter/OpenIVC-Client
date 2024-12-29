@@ -99,19 +99,19 @@ pub fn main() anyerror!void {
     //--------------------------------------------------------------------------------------
     // Main game loop
     while (!rl.windowShouldClose()) {
-        const current_width = rl.getScreenWidth();
+        const current_width = @as(f32, @floatFromInt(rl.getScreenWidth()));
         const currentHeight = rl.getScreenHeight();
-        const scale: f32 = @min(@as(f32, @floatFromInt(current_width)) / @as(f32, @floatFromInt(screen_width)), @as(f32, @floatFromInt(currentHeight)) / @as(f32, @floatFromInt(screen_height)));
+        const scale: f32 = @min((current_width / @as(f32, @floatFromInt(screen_width))), @as(f32, @floatFromInt(currentHeight)) / @as(f32, @floatFromInt(screen_height)));
 
         // Base dimensions
-        const margin = @as(i32, @intFromFloat(10.0 * scale));
-        const group_width = @as(i32, @intFromFloat(600.0 * scale));
-        const element_height = @as(i32, @intFromFloat(25.0 * scale));
-        const label_width = @as(i32, @intFromFloat(100.0 * scale));
-        const input_width = @as(i32, @intFromFloat(200.0 * scale));
-        const button_width = @as(i32, @intFromFloat(100.0 * scale));
-        const group_padding = @as(i32, @intFromFloat(20.0 * scale));
-        const freq_width = @as(i32, @intFromFloat(80.0 * scale));
+        const margin: f32 = 10.0 * scale;
+        const group_width: f32 = 600.0 * scale;
+        const element_height: f32 = 25.0 * scale;
+        const label_width: f32 = 100.0 * scale;
+        const input_width: f32 = 200.0 * scale;
+        const button_width: f32 = 100.0 * scale;
+        const group_padding: f32 = 20.0 * scale;
+        const freq_width: f32 = 80.0 * scale;
         rg.guiSetStyle(rg.GuiControl.default, @intFromEnum(rg.GuiDefaultProperty.text_size), @intFromFloat(@max(14 * scale, 8)));
         rg.guiSetStyle(rg.GuiControl.default, @intFromEnum(rg.GuiDefaultProperty.text_spacing), @intFromFloat(@max(1 * scale, 1)));
 
@@ -127,11 +127,11 @@ pub fn main() anyerror!void {
 
         // Top bar: FPS and Theme selector
         const fps_text = rl.textFormat("FPS: %d", .{rl.getFPS()});
-        rl.drawText(fps_text, margin, margin, @as(i32, @intFromFloat(20.0 * scale)), rl.Color.dark_gray);
+        rl.drawText(fps_text, @intFromFloat(margin), @intFromFloat(margin), @as(i32, @intFromFloat(20.0 * scale)), rl.Color.dark_gray);
 
         const dropdownBounds = rl.Rectangle{
-            .x = @floatFromInt(current_width - @as(i32, @intFromFloat(150.0 * scale)) - margin),
-            .y = @floatFromInt(margin),
+            .x = current_width - (150.0 * scale) - margin,
+            .y = margin,
             .width = 150.0 * scale,
             .height = 20.0 * scale,
         };
@@ -148,65 +148,34 @@ pub fn main() anyerror!void {
         var current_y = margin * 4 + group_padding;
         // Server Connection Group
         const server_config = ServerConnection.DrawConfig{
-            .base_x = @floatFromInt(base_x),
-            .start_y = @floatFromInt(current_y),
-            .group_width = @floatFromInt(group_width),
-            .element_height = @floatFromInt(element_height),
-            .label_width = @floatFromInt(label_width),
-            .input_width = @floatFromInt(input_width),
-            .button_width = @floatFromInt(button_width),
-            .margin = @floatFromInt(margin),
+            .base_x = base_x,
+            .start_y = current_y,
+            .group_width = group_width,
+            .element_height = element_height,
+            .label_width = label_width,
+            .input_width = input_width,
+            .button_width = button_width,
+            .margin = margin,
             .scale = scale,
         };
 
         ServerConnection.drawServerGroup(&server_state, server_config);
-        current_y += @as(i32, @intFromFloat(120.0 * scale)); // Spacing between panels
+        current_y += 120.0 * scale; // Spacing between panels
 
         // Radio Frequencies Group
-        // const radioGroupY = current_y + 8 + element_height + margin * 2;
-        // _ = rg.guiGroupBox(.{
-        //     .x = @floatFromInt(@divTrunc((currentWidth - group_width), 2)),
-        //     .y = @floatFromInt(radioGroupY),
-        //     .width = @floatFromInt(group_width),
-        //     .height = 160.0 * scale,
-        // }, "Radio Frequencies");
-
-        // current_y = radioGroupY + group_padding;
-
-        // // UHF Row
-        // _ = rg.guiLabel(.{ .x = @floatFromInt(base_x), .y = @floatFromInt(current_y), .width = @floatFromInt(freq_width), .height = @floatFromInt(element_height) }, "UHF Freq:");
-        // _ = rg.guiTextBox(.{ .x = @floatFromInt(base_x + freq_width), .y = @floatFromInt(current_y), .width = @floatFromInt(2 * freq_width), .height = @floatFromInt(element_height) }, @ptrCast(&uhf_freq), 14, true);
-        // _ = rg.guiButton(.{ .x = @floatFromInt(base_x + freq_width + 2 * freq_width + margin), .y = @floatFromInt(current_y), .width = @floatFromInt(button_width), .height = @floatFromInt(element_height) }, "Change FRQ");
-        // _ = rg.guiSlider(.{ .x = @floatFromInt(base_x + freq_width + 2 * freq_width + button_width + 20 + margin * 2), .y = @floatFromInt(current_y), .width = @floatFromInt(100), .height = @floatFromInt(element_height) }, "Vol:", "", &uhf_vol, 0, 10);
-        // _ = rg.guiCheckBox(.{ .x = @floatFromInt(base_x + group_width - 200), .y = @floatFromInt(current_y), .width = @floatFromInt(20), .height = @floatFromInt(element_height) }, "UHF Active (F1)", &uhf_active);
-        // current_y += element_height + margin;
-
-        // // VHF Row
-        // _ = rg.guiLabel(.{ .x = @floatFromInt(base_x), .y = @floatFromInt(current_y), .width = @floatFromInt(freq_width), .height = @floatFromInt(element_height) }, "VHF Freq:");
-        // _ = rg.guiTextBox(.{ .x = @floatFromInt(base_x + freq_width), .y = @floatFromInt(current_y), .width = @floatFromInt(2 * freq_width), .height = @floatFromInt(element_height) }, @ptrCast(&vhf_freq), 14, true);
-        // _ = rg.guiButton(.{ .x = @floatFromInt(base_x + freq_width + 2 * freq_width + margin), .y = @floatFromInt(current_y), .width = @floatFromInt(button_width), .height = @floatFromInt(element_height) }, "Change FRQ");
-        // _ = rg.guiSlider(.{ .x = @floatFromInt(base_x + freq_width + 2 * freq_width + button_width + 20 + margin * 2), .y = @floatFromInt(current_y), .width = @floatFromInt(100), .height = @floatFromInt(element_height) }, "Vol:", "", &vhf_vol, 0, 10);
-        // _ = rg.guiCheckBox(.{ .x = @floatFromInt(base_x + group_width - 200), .y = @floatFromInt(current_y), .width = @floatFromInt(20), .height = @floatFromInt(element_height) }, "VHF Active (F2)", &vhf_active);
-        // current_y += element_height + margin;
-
-        // // Control Row
-        // _ = rg.guiCheckBox(.{ .x = @floatFromInt(base_x), .y = @floatFromInt(current_y), .width = @floatFromInt(20), .height = @floatFromInt(element_height) }, "Force Local Control", &force_local);
-        // _ = rg.guiCheckBox(.{ .x = @floatFromInt(base_x + 150), .y = @floatFromInt(current_y), .width = @floatFromInt(20), .height = @floatFromInt(element_height) }, "AGC", &agc_enabled);
-        // _ = rg.guiSlider(.{ .x = @floatFromInt(base_x + 280), .y = @floatFromInt(current_y), .width = @floatFromInt(100), .height = @floatFromInt(element_height) }, "Intercom Vol:", "", &intercom_vol, 0, 10);
-        // _ = rg.guiCheckBox(.{ .x = @floatFromInt(base_x + group_width - 200), .y = @floatFromInt(current_y), .width = @floatFromInt(20), .height = @floatFromInt(element_height) }, "GUARD Active (F3)", &guard_active);
         const radio_config = RadioFreq.DrawConfig{
-            .base_x = @floatFromInt(base_x),
-            .start_y = @floatFromInt(current_y),
-            .group_width = @floatFromInt(group_width),
-            .element_height = @floatFromInt(element_height),
-            .freq_width = @floatFromInt(freq_width),
-            .button_width = @floatFromInt(button_width),
-            .margin = @floatFromInt(margin),
+            .base_x = base_x,
+            .start_y = current_y,
+            .group_width = group_width,
+            .element_height = element_height,
+            .freq_width = freq_width,
+            .button_width = button_width,
+            .margin = margin,
             .scale = scale,
         };
 
         RadioFreq.drawRadioGroup(&radio_state, radio_config);
-        current_y += @as(i32, @intFromFloat(170.0 * scale)); // Spacing between panels
+        current_y += 170.0 * scale; // Spacing between panels
 
         // Sound Devices Group
         const sound_config = SoundDevices.DrawConfig{

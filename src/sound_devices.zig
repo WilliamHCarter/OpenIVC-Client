@@ -9,12 +9,12 @@ pub const SoundState = struct {
 };
 
 pub const DrawConfig = struct {
-    base_x: i32,
-    start_y: i32,
-    group_width: i32,
-    element_height: i32,
-    label_width: i32,
-    margin: i32,
+    base_x: f32,
+    start_y: f32,
+    group_width: f32,
+    element_height: f32,
+    label_width: f32,
+    margin: f32,
     scale: f32,
 };
 
@@ -24,23 +24,23 @@ pub fn drawSoundGroup(state: *SoundState, config: DrawConfig) void {
 
     // Draw the group box
     _ = rg.guiGroupBox(.{
-        .x = @floatFromInt(@divTrunc((rl.getScreenWidth() - config.group_width), 2)),
-        .y = @floatFromInt(current_y),
-        .width = @floatFromInt(config.group_width),
+        .x = (@as(f32, @floatFromInt(rl.getScreenWidth())) - config.group_width) / 2,
+        .y = current_y,
+        .width = config.group_width,
         .height = 100.0 * config.scale,
     }, "Sound Devices");
 
-    current_y += @as(i32, @intFromFloat(20.0 * config.scale)); // Group padding
+    current_y += 20.0 * config.scale; // Group padding
 
     // Capture device section
-    _ = rg.guiLabel(.{ .x = @floatFromInt(config.base_x), .y = @floatFromInt(current_y), .width = @floatFromInt(config.label_width), .height = @floatFromInt(config.element_height) }, "Capture:");
+    _ = rg.guiLabel(.{ .x = config.base_x, .y = current_y, .width = config.label_width, .height = config.element_height }, "Capture:");
 
     // Capture dropdown
     const input_dropdown_bounds = rl.Rectangle{
-        .x = @floatFromInt(config.base_x),
-        .y = @floatFromInt(current_y + config.element_height),
-        .width = @floatFromInt(@divTrunc(config.group_width, 2) - config.margin * 3),
-        .height = @floatFromInt(config.element_height),
+        .x = config.base_x,
+        .y = current_y + config.element_height,
+        .width = (config.group_width / 2) - (config.margin * 3),
+        .height = config.element_height,
     };
 
     // Draw the capture dropdown and handle click
@@ -50,14 +50,14 @@ pub fn drawSoundGroup(state: *SoundState, config: DrawConfig) void {
     }
 
     // Playback device section
-    _ = rg.guiLabel(.{ .x = @floatFromInt(config.base_x + @divTrunc(config.group_width, 2)), .y = @floatFromInt(current_y), .width = @floatFromInt(config.label_width), .height = @floatFromInt(config.element_height) }, "Playback:");
+    _ = rg.guiLabel(.{ .x = config.base_x + (config.group_width / 2), .y = current_y, .width = config.label_width, .height = config.element_height }, "Playback:");
 
     // Playback dropdown
     const output_dropdown_bounds = rl.Rectangle{
-        .x = @floatFromInt(config.base_x + @divTrunc(config.group_width, 2) - config.margin),
-        .y = @floatFromInt(current_y + config.element_height),
-        .width = @floatFromInt(@divTrunc(config.group_width, 2) - config.margin * 3),
-        .height = @floatFromInt(config.element_height),
+        .x = config.base_x + (config.group_width / 2) - config.margin,
+        .y = current_y + config.element_height,
+        .width = (config.group_width / 2) - (config.margin * 3),
+        .height = config.element_height,
     };
 
     // Draw the playback dropdown and handle click
