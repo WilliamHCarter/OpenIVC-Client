@@ -64,7 +64,11 @@ pub fn main() anyerror!void {
         .nickname_buf = [_]u8{space} ** 128,
         .server_ip_buf = [_]u8{space} ** 128,
         .connection_status_buf = [_]u8{space} ** 128,
+        .nickname_len = 0,
+        .server_ip_len = 0,
         .connected = false,
+        .nickname_edit = false,
+        .server_ip_edit = false,
     };
 
     // Initialize default values
@@ -76,6 +80,10 @@ pub fn main() anyerror!void {
     var radio_state = RadioFreq.RadioState{
         .uhf_freq = [_]u8{32} ** 32,
         .vhf_freq = [_]u8{32} ** 32,
+        .uhf_freq_len = 0,
+        .vhf_freq_len = 0,
+        .uhf_edit = false,
+        .vhf_edit = false,
         .uhf_vol = 6.0,
         .vhf_vol = 6.0,
         .intercom_vol = 0.0,

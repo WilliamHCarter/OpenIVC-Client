@@ -1,9 +1,14 @@
 const rl = @import("raylib");
 const rg = @import("raygui");
+const InputBox = @import("ui_inputbox.zig");
 
 pub const RadioState = struct {
     uhf_freq: [32]u8,
     vhf_freq: [32]u8,
+    uhf_freq_len: usize,
+    vhf_freq_len: usize,
+    uhf_edit: bool,
+    vhf_edit: bool,
     uhf_vol: f32,
     vhf_vol: f32,
     intercom_vol: f32,
@@ -49,7 +54,12 @@ pub fn drawRadioGroup(state: *RadioState, config: DrawConfig) void {
 
     // UHF Row
     _ = rg.guiLabel(.{ .x = config.base_x, .y = current_y, .width = config.freq_width, .height = config.element_height }, "UHF Freq:");
-    _ = rg.guiTextBox(textbox_bounds, @ptrCast(&state.uhf_freq), 14, true);
+    const uhf_hover = InputBox.handleInputBox(.{
+        .buffer = &state.uhf_freq,
+        .len = &state.uhf_freq_len,
+        .is_editing = &state.uhf_edit,
+        .bounds = textbox_bounds,
+    });
     _ = rg.guiButton(button_bounds, "Change FRQ");
     _ = rg.guiSlider(slider_bounds, "Vol:", "", &state.uhf_vol, 0, 10);
     _ = rg.guiCheckBox(checkbox_bounds, "UHF Active (F1)", &state.uhf_active);
@@ -62,7 +72,30 @@ pub fn drawRadioGroup(state: *RadioState, config: DrawConfig) void {
 
     // VHF Row
     _ = rg.guiLabel(.{ .x = config.base_x, .y = current_y, .width = config.freq_width, .height = config.element_height }, "VHF Freq:");
-    _ = rg.guiTextBox(textbox_bounds, @ptrCast(&state.vhf_freq), 14, true);
+    const vhf_hover = InputBox.handleInputBox(.{
+        .buffer = &state.vhf_freq,
+        .len = &state.vhf_freq_len,
+        .is_editing = &state.vhf_edit,
+        .bounds = textbox_bounds,
+    });
+
+    // Handle mutual exclusion of editing states
+    if (rl.isMouseButtonPressed(.mouse_button_left)) {
+        if (uhf_hover) {
+            state.vhf_edit = false;
+        } else if (vhf_hover) {
+            state.uhf_edit = false;
+        } else {
+            state.uhf_edit = false;
+            state.vhf_edit = false;
+        }
+    }
+
+    // Reset cursor if not hovering over any input
+    if (!uhf_hover and !vhf_hover) {
+        rl.setMouseCursor(.mouse_cursor_default);
+    }
+
     _ = rg.guiButton(button_bounds, "Change FRQ");
     _ = rg.guiSlider(slider_bounds, "Vol:", "", &state.vhf_vol, 0, 10);
     _ = rg.guiCheckBox(checkbox_bounds, "VHF Active (F2)", &state.vhf_active);
