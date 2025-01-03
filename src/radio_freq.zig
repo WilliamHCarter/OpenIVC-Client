@@ -31,19 +31,12 @@ pub const DrawConfig = struct {
 };
 
 pub fn drawRadioGroup(state: *RadioState, config: DrawConfig) void {
-    const row_count = 3; // UHF, VHF, and control rows
-    var row_positions: [row_count]f32 = undefined;
-
-    // Calculate Y positions once
-    const pos = config.start_y + (20.0 * config.scale);
-    for (&row_positions, 0..) |*row_y, i| {
-        row_y.* = pos + (i * (config.element_height + config.margin));
-    }
     var current_y = config.start_y;
-    var textbox_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.freq_width, row_positions[0], 1.6 * config.freq_width, config.element_height);
-    var button_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.freq_width + (1.6 * config.freq_width) + config.margin, row_positions[0], config.button_width, config.element_height);
-    var slider_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.freq_width + (1.6 * config.freq_width) + config.button_width + (25.0 * config.scale) + (config.margin * 2.0), row_positions[0], 60.0 * config.scale, config.element_height);
-    var checkbox_bounds: rl.Rectangle = rl.Rectangle.init(config.base_x + config.group_width - (175.0 * config.scale), row_positions[0], config.element_height, config.element_height);
+    var textbox_bounds = rl.Rectangle.init(config.base_x + config.freq_width, current_y, 1.6 * config.freq_width, config.element_height);
+    var button_bounds = rl.Rectangle.init(textbox_bounds.x + (1.6 * config.freq_width) + config.margin, current_y, config.button_width, config.element_height);
+    var slider_bounds = rl.Rectangle.init(button_bounds.x + config.button_width + (25.0 * config.scale) + config.margin, current_y, 60.0 * config.scale, config.element_height);
+    var checkbox_bounds = rl.Rectangle.init(config.base_x + config.group_width - (175.0 * config.scale), current_y, config.element_height, config.element_height);
+    const bounds_ptrs = [_]*rl.Rectangle{ &slider_bounds, &checkbox_bounds, &textbox_bounds, &button_bounds };
 
     // Draw the group box
     _ = rg.guiGroupBox(.{
@@ -54,10 +47,9 @@ pub fn drawRadioGroup(state: *RadioState, config: DrawConfig) void {
     }, "Radio Frequencies");
 
     current_y += 20.0 * config.scale; // Group padding
-    slider_bounds.y = current_y;
-    checkbox_bounds.y = current_y;
-    textbox_bounds.y = current_y;
-    button_bounds.y = current_y;
+    for (bounds_ptrs) |bound| {
+        bound.y = current_y;
+    }
 
     // UHF Row
     _ = rg.guiLabel(.{ .x = config.base_x, .y = current_y, .width = config.freq_width, .height = config.element_height }, "UHF Freq:");
@@ -72,10 +64,9 @@ pub fn drawRadioGroup(state: *RadioState, config: DrawConfig) void {
     _ = rg.guiCheckBox(checkbox_bounds, "UHF Active (F1)", &state.uhf_active);
 
     current_y += config.element_height + config.margin;
-    slider_bounds.y = current_y;
-    checkbox_bounds.y = current_y;
-    textbox_bounds.y = current_y;
-    button_bounds.y = current_y;
+    for (bounds_ptrs) |bound| {
+        bound.y = current_y;
+    }
 
     // VHF Row
     _ = rg.guiLabel(.{ .x = config.base_x, .y = current_y, .width = config.freq_width, .height = config.element_height }, "VHF Freq:");
@@ -108,10 +99,9 @@ pub fn drawRadioGroup(state: *RadioState, config: DrawConfig) void {
     _ = rg.guiCheckBox(checkbox_bounds, "VHF Active (F2)", &state.vhf_active);
 
     current_y += config.element_height + config.margin;
-    slider_bounds.y = current_y;
-    checkbox_bounds.y = current_y;
-    textbox_bounds.y = current_y;
-    button_bounds.y = current_y;
+    for (bounds_ptrs) |bound| {
+        bound.y = current_y;
+    }
 
     // Control Row
     _ = rg.guiCheckBox(.{

@@ -33,7 +33,8 @@ pub fn drawSoundGroup(state: *SoundState, config: DrawConfig) void {
     current_y += 20.0 * config.scale; // Group padding
 
     // Capture device section
-    _ = rg.guiLabel(.{ .x = config.base_x, .y = current_y, .width = config.label_width, .height = config.element_height }, "Capture:");
+    var label_bounds = rl.Rectangle.init(config.base_x, current_y, config.label_width, config.element_height);
+    _ = rg.guiLabel(label_bounds, "Capture:");
 
     // Capture dropdown
     const input_dropdown_bounds = rl.Rectangle{
@@ -50,7 +51,8 @@ pub fn drawSoundGroup(state: *SoundState, config: DrawConfig) void {
     }
 
     // Playback device section
-    _ = rg.guiLabel(.{ .x = config.base_x + (config.group_width / 2), .y = current_y, .width = config.label_width, .height = config.element_height }, "Playback:");
+    label_bounds.x = config.base_x + (config.group_width / 2);
+    _ = rg.guiLabel(label_bounds, "Playback:");
 
     // Playback dropdown
     const output_dropdown_bounds = rl.Rectangle{
