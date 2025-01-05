@@ -36,7 +36,7 @@ pub fn drawRadioGroup(state: *RadioState, config: DrawConfig) void {
     var button_bounds = rl.Rectangle.init(textbox_bounds.x + (1.6 * config.freq_width) + config.margin, current_y, config.button_width, config.element_height);
     var slider_bounds = rl.Rectangle.init(button_bounds.x + config.button_width + (25.0 * config.scale) + config.margin, current_y, 60.0 * config.scale, config.element_height);
     var checkbox_bounds = rl.Rectangle.init(config.base_x + config.group_width - (175.0 * config.scale), current_y, config.element_height, config.element_height);
-    const bounds_ptrs = [_]*rl.Rectangle{ &slider_bounds, &checkbox_bounds, &textbox_bounds, &button_bounds };
+    const bounds_ptrs = [4]*rl.Rectangle{ &slider_bounds, &checkbox_bounds, &textbox_bounds, &button_bounds };
 
     // Draw the group box
     _ = rg.guiGroupBox(.{
