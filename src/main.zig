@@ -4,9 +4,15 @@ const std = @import("std");
 const ServerConnection = @import("server_connection.zig");
 const SoundDevices = @import("sound_devices.zig");
 const RadioFreq = @import("radio_freq.zig");
-const c = @cImport({
-    @cInclude("client.h");
-});
+const builtin = @import("builtin");
+const is_windows = builtin.os.tag == .windows;
+
+const c = if (is_windows)
+    @cImport({
+        @cInclude("client.h");
+    })
+else
+    undefined;
 
 // Define available themes
 const Theme = enum(i32) {
@@ -44,11 +50,13 @@ pub fn loadTheme(theme: Theme) void {
 }
 
 pub fn main() anyerror!void {
-    const err = c.startClient();
-    if (err != 0) {
-        std.debug.print("Failed to initialize client: {}\n", .{err});
-    } else {
-        std.debug.print("Client initialized successfully.\n", .{});
+    if (is_windows) {
+        const err = c.startClient();
+        if (err != 0) {
+            std.debug.print("Failed to initialize client: {}\n", .{err});
+        } else {
+            std.debug.print("Client initialized successfully.\n", .{});
+        }
     }
     // Initialization
     //--------------------------------------------------------------------------------------
