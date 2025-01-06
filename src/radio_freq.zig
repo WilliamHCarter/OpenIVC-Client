@@ -78,7 +78,7 @@ pub fn drawRadioGroup(state: *RadioState, config: DrawConfig) void {
     });
 
     // Handle mutual exclusion of editing states
-    if (rl.isMouseButtonPressed(.mouse_button_left)) {
+    if (rl.isMouseButtonPressed(rl.MouseButton.left)) {
         if (uhf_hover) {
             state.vhf_edit = false;
         } else if (vhf_hover) {
@@ -91,7 +91,7 @@ pub fn drawRadioGroup(state: *RadioState, config: DrawConfig) void {
 
     // Reset cursor if not hovering over any input
     if (!uhf_hover and !vhf_hover) {
-        rl.setMouseCursor(.mouse_cursor_default);
+        rl.setMouseCursor(rl.MouseCursor.default);
     }
 
     _ = rg.guiButton(button_bounds, "Change FRQ");

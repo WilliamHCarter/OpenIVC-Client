@@ -59,7 +59,7 @@ pub fn drawServerGroup(state: *ServerState, config: DrawConfig) void {
         .bounds = text_bounds,
     });
 
-    if (rl.isMouseButtonPressed(.mouse_button_left)) {
+    if (rl.isMouseButtonPressed(rl.MouseButton.left)) {
         if (nickname_hover) {
             state.server_ip_edit = false;
         } else if (server_ip_hover) {
@@ -71,7 +71,7 @@ pub fn drawServerGroup(state: *ServerState, config: DrawConfig) void {
     }
 
     if (!nickname_hover and !server_ip_hover) {
-        rl.setMouseCursor(.mouse_cursor_default);
+        rl.setMouseCursor(rl.MouseCursor.default);
     }
 
     label_bounds.y += config.element_height + config.margin;

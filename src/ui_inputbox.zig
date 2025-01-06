@@ -14,16 +14,16 @@ pub fn handleInputBox(state: InputBoxState) bool {
     const mouse_on_input = rl.checkCollisionPointRec(mouse_pos, state.bounds);
 
     // Handle click activation
-    if (mouse_on_input and rl.isMouseButtonPressed(.mouse_button_left)) {
+    if (mouse_on_input and rl.isMouseButtonPressed(rl.MouseButton.left)) {
         state.is_editing.* = true;
-        rl.setMouseCursor(.mouse_cursor_ibeam);
+        rl.setMouseCursor(rl.MouseCursor.ibeam);
         return true;
     }
 
     // Handle deactivation when clicking outside
-    if (rl.isMouseButtonPressed(.mouse_button_left) and !mouse_on_input) {
+    if (rl.isMouseButtonPressed(rl.MouseButton.left) and !mouse_on_input) {
         state.is_editing.* = false;
-        rl.setMouseCursor(.mouse_cursor_default);
+        rl.setMouseCursor(rl.MouseCursor.default);
     }
 
     // Handle text input when active
@@ -39,7 +39,7 @@ pub fn handleInputBox(state: InputBoxState) bool {
         }
 
         // Handle backspace
-        if (rl.isKeyPressed(.key_backspace) and state.len.* > 0) {
+        if (rl.isKeyPressed(rl.KeyboardKey.backspace) and state.len.* > 0) {
             state.len.* -= 1;
             state.buffer[state.len.*] = 0;
         }
