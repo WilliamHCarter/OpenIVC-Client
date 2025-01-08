@@ -127,11 +127,17 @@ pub fn drawGui(state: *GuiState) void {
         state.previous_theme_index = state.theme_index;
     }
 
-    rl.clearBackground(rl.Color.ray_white);
+    const background_bounds = rl.Rectangle{
+        .x = 0,
+        .y = 0,
+        .width = current_width,
+        .height = @as(f32, @floatFromInt(currentHeight)),
+    };
+    _ = rg.guiPanel(background_bounds, null);
 
     // Draw FPS counter
     const fps_text = rl.textFormat("FPS: %d", .{rl.getFPS()});
-    rl.drawText(fps_text, @intFromFloat(margin), @intFromFloat(margin), @as(i32, @intFromFloat(20.0 * scale)), rl.Color.dark_gray);
+    _ = rg.guiLabel(.{ .x = margin, .y = scale * 20.0, .width = scale * 150.0, .height = scale * 30.0 }, fps_text);
 
     // Theme dropdown
     const dropdownBounds = rl.Rectangle{
