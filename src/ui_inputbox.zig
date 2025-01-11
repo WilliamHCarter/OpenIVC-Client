@@ -48,23 +48,9 @@ pub fn handleInputBox(state: InputBoxState) bool {
     // Draw the box
     const border_color = if (state.is_editing.*) rl.Color.dark_gray else rl.Color.light_gray;
     rl.drawRectangleLinesEx(state.bounds, 1, border_color);
-
-    // Draw the text with padding
-    const padding: f32 = 4;
-    const text_pos = rl.Vector2{
-        .x = state.bounds.x + padding,
-        .y = state.bounds.y + (state.bounds.height - 20) * 0.5,
-    };
-    _ = rg.guiLabel(state.bounds, @ptrCast(&state.buffer[0]));
-
-    // Draw cursor when editing
-    if (state.is_editing.*) {
-        const text_width = rl.measureText(@ptrCast(&state.buffer[0]), 20);
-        const cursor_x = text_pos.x + @as(f32, @floatFromInt(text_width));
-        const cursor_y = text_pos.y;
-        const cursor_height: f32 = 20;
-        rl.drawLineV(.{ .x = cursor_x, .y = cursor_y }, .{ .x = cursor_x, .y = cursor_y + cursor_height }, rl.Color.black);
-    }
+    var label_bounds: rl.Rectangle = state.bounds;
+    label_bounds.x += 5;
+    _ = rg.guiLabel(label_bounds, @ptrCast(&state.buffer[0]));
 
     return mouse_on_input;
 }

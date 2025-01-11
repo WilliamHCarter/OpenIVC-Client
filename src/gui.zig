@@ -118,8 +118,8 @@ pub fn drawGui(state: *GuiState) void {
     const freq_width: f32 = 80.0 * scale;
 
     // Set GUI style based on scale
-    rg.guiSetStyle(rg.GuiControl.default, @intFromEnum(rg.GuiDefaultProperty.text_size), @intFromFloat(@max(14 * scale, 8)));
-    rg.guiSetStyle(rg.GuiControl.default, @intFromEnum(rg.GuiDefaultProperty.text_spacing), @intFromFloat(@max(1 * scale, 1)));
+    rg.guiSetStyle(rg.GuiControl.default, rg.GuiDefaultProperty.text_size, @intFromFloat(@max(14 * scale, 8)));
+    rg.guiSetStyle(rg.GuiControl.default, rg.GuiDefaultProperty.text_spacing, @intFromFloat(@max(1 * scale, 1)));
 
     // Theme handling
     if (state.theme_index != state.previous_theme_index) {
