@@ -4,24 +4,18 @@ const gui = @import("gui.zig");
 const builtin = @import("builtin");
 
 const is_windows = builtin.os.tag == .windows;
-
-const c = if (is_windows)
-    @cImport({
-        @cInclude("client.h");
-    })
-else
-    undefined;
+const client = if (builtin.os.tag == .windows) @import("windows_h.zig").client;
 
 pub fn main() anyerror!void {
     // Initialize Windows client if applicable
-    // if (is_windows) {
-    //     const err = c.startClient();
-    //     if (err != 0) {
-    //         std.debug.print("Failed to initialize client: {}\n", .{err});
-    //     } else {
-    //         std.debug.print("Client initialized successfully.\n", .{});
-    //     }
-    // }
+    if (is_windows) {
+        const err = client.startClient();
+        if (err != 0) {
+            std.debug.print("Failed to initialize client: {}\n", .{err});
+        } else {
+            std.debug.print("Client initialized successfully.\n", .{});
+        }
+    }
 
     // Initialize window
     rl.setConfigFlags(.{ .window_resizable = true });
