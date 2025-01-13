@@ -4,11 +4,11 @@ const std = @import("std");
 const InputBox = @import("ui_inputbox.zig");
 
 pub const ServerState = struct {
-    nickname_buf: [128]u8,
-    server_ip_buf: [128]u8,
-    connection_status_buf: [128]u8,
-    nickname_len: usize = 0,
-    server_ip_len: usize = 0,
+    nickname_buf: [128]u8 = "Micro                                                                                                                           ".*,
+    server_ip_buf: [128]u8 = "5.9.54.24                                                                                                                       ".*,
+    connection_status_buf: [128]u8 = "Connected                                                                                                                       ".*,
+    nickname_len: usize = 5,
+    server_ip_len: usize = 9,
     connected: bool = false,
     nickname_edit: bool = false,
     server_ip_edit: bool = false,

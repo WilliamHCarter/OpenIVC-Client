@@ -27,52 +27,16 @@ pub const GuiState = struct {
     screen_height: i32,
 
     pub fn init() GuiState {
-        const space: u8 = 32;
-        var state = GuiState{
+        const state = GuiState{
             .theme_index = 0,
             .previous_theme_index = -1,
             .theme_dropdown_open = false,
             .screen_width = 800,
             .screen_height = 500,
-            .server_state = ServerConnection.ServerState{
-                .nickname_buf = [_]u8{space} ** 128,
-                .server_ip_buf = [_]u8{space} ** 128,
-                .connection_status_buf = [_]u8{space} ** 128,
-                .nickname_len = 0,
-                .server_ip_len = 0,
-                .connected = false,
-                .nickname_edit = false,
-                .server_ip_edit = false,
-            },
-            .radio_state = RadioFreq.RadioState{
-                .uhf_freq = [_]u8{32} ** 32,
-                .vhf_freq = [_]u8{32} ** 32,
-                .uhf_freq_len = 0,
-                .vhf_freq_len = 0,
-                .uhf_edit = false,
-                .vhf_edit = false,
-                .uhf_vol = 6.0,
-                .vhf_vol = 6.0,
-                .intercom_vol = 0.0,
-                .uhf_active = false,
-                .vhf_active = false,
-                .force_local = false,
-                .agc_enabled = false,
-                .guard_active = false,
-            },
-            .sound_state = SoundDevices.SoundState{
-                .capture_device_index = 0,
-                .playback_device_index = 0,
-                .input_dropdown_open = false,
-                .output_dropdown_open = false,
-            },
+            .server_state = ServerConnection.ServerState{},
+            .radio_state = RadioFreq.RadioState{},
+            .sound_state = SoundDevices.SoundState{},
         };
-
-        // Initialize default values
-        @memcpy(state.server_state.nickname_buf[0..5], "Micro");
-        @memcpy(state.server_state.server_ip_buf[0..9], "5.9.54.24");
-        @memcpy(state.server_state.connection_status_buf[0..9], "Connected");
-
         return state;
     }
 };

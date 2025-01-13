@@ -3,20 +3,20 @@ const rg = @import("raygui");
 const InputBox = @import("ui_inputbox.zig");
 
 pub const RadioState = struct {
-    uhf_freq: [32]u8,
-    vhf_freq: [32]u8,
-    uhf_freq_len: usize,
-    vhf_freq_len: usize,
-    uhf_edit: bool,
-    vhf_edit: bool,
-    uhf_vol: f32,
-    vhf_vol: f32,
-    intercom_vol: f32,
-    uhf_active: bool,
-    vhf_active: bool,
-    force_local: bool,
-    agc_enabled: bool,
-    guard_active: bool,
+    uhf_freq: [32]u8 = [_]u8{32} ** 32,
+    vhf_freq: [32]u8 = [_]u8{32} ** 32,
+    uhf_freq_len: usize = 0,
+    vhf_freq_len: usize = 0,
+    uhf_edit: bool = false,
+    vhf_edit: bool = false,
+    uhf_vol: f32 = 6.0,
+    vhf_vol: f32 = 6.0,
+    intercom_vol: f32 = 0.0,
+    uhf_active: bool = false,
+    vhf_active: bool = false,
+    force_local: bool = false,
+    agc_enabled: bool = false,
+    guard_active: bool = false,
 };
 
 pub const DrawConfig = struct {
