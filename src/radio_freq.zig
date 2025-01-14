@@ -30,7 +30,8 @@ pub const DrawConfig = struct {
     scale: f32,
 };
 
-pub fn drawRadioGroup(state: *RadioState, config: DrawConfig) void {
+pub fn drawRadioGroup(config: DrawConfig) void {
+    const state = RadioState{};
     var current_y = config.start_y;
     var textbox_bounds = rl.Rectangle.init(config.base_x + config.freq_width, current_y, 1.6 * config.freq_width, config.element_height);
     var button_bounds = rl.Rectangle.init(textbox_bounds.x + (1.6 * config.freq_width) + config.margin, current_y, config.button_width, config.element_height);

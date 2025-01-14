@@ -19,7 +19,8 @@ pub const DrawConfig = struct {
 };
 
 // Returns the final Y position after drawing
-pub fn drawSoundGroup(state: *SoundState, config: DrawConfig) void {
+pub fn drawSoundGroup(config: DrawConfig) void {
+    const state = SoundState{};
     var current_y = config.start_y;
 
     // Draw the group box

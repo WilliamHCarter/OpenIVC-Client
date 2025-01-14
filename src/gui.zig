@@ -20,22 +20,16 @@ pub const GuiState = struct {
     theme_index: i32,
     previous_theme_index: i32,
     theme_dropdown_open: bool,
-    server_state: ServerConnection.ServerState,
-    radio_state: RadioFreq.RadioState,
-    sound_state: SoundDevices.SoundState,
     screen_width: i32,
     screen_height: i32,
 
     pub fn init() GuiState {
         const state = GuiState{
-            .theme_index = 0,
+            .theme_index = 5,
             .previous_theme_index = -1,
             .theme_dropdown_open = false,
             .screen_width = 800,
             .screen_height = 500,
-            .server_state = ServerConnection.ServerState{},
-            .radio_state = RadioFreq.RadioState{},
-            .sound_state = SoundDevices.SoundState{},
         };
         return state;
     }
@@ -132,7 +126,7 @@ pub fn drawGui(state: *GuiState) void {
         .margin = margin,
         .scale = scale,
     };
-    ServerConnection.drawServerGroup(&state.server_state, server_config);
+    ServerConnection.drawServerGroup(server_config);
     current_y += 120.0 * scale;
 
     // Draw radio frequencies group
@@ -146,7 +140,7 @@ pub fn drawGui(state: *GuiState) void {
         .margin = margin,
         .scale = scale,
     };
-    RadioFreq.drawRadioGroup(&state.radio_state, radio_config);
+    RadioFreq.drawRadioGroup(radio_config);
     current_y += 170.0 * scale;
 
     // Draw sound devices group
@@ -159,5 +153,5 @@ pub fn drawGui(state: *GuiState) void {
         .margin = margin,
         .scale = scale,
     };
-    SoundDevices.drawSoundGroup(&state.sound_state, sound_config);
+    SoundDevices.drawSoundGroup(sound_config);
 }
