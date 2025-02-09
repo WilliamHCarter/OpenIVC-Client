@@ -1,9 +1,9 @@
 const rl = @import("raylib");
 const rg = @import("raygui");
 const std = @import("std");
-const ServerConnection = @import("server_connection.zig");
-const SoundDevices = @import("sound_devices.zig");
-const RadioFreq = @import("radio_freq.zig");
+const ServerConnection = @import("gui/server_connection.zig");
+const SoundDevices = @import("gui/sound_devices.zig");
+const RadioFreq = @import("gui/radio_freq.zig");
 
 // Define available themes
 pub const Theme = enum(i32) {

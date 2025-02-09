@@ -5,6 +5,14 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    const miniaudio = b.addSystemCommand(&.{
+        "curl",
+        "-o",
+        "libs/miniaudio.h",
+        "-L",
+        "https://raw.githubusercontent.com/mackron/miniaudio/master/miniaudio.h",
+        "--create-dirs",
+    });
     const raylib_dep = b.dependency("raylib-zig", .{
         .target = target,
         .optimize = optimize,
@@ -19,6 +27,10 @@ pub fn build(b: *std.Build) !void {
         .optimize = optimize,
         .target = target,
     });
+
+    exe.step.dependOn(&miniaudio.step);
+    exe.addIncludePath(.{ .path = "libs" });
+    exe.linkLibC();
 
     if (target.result.os.tag == .windows) {
         exe.addCSourceFile(.{ .file = b.path("src/c-code/client.c") });
