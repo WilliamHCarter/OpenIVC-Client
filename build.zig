@@ -5,11 +5,9 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const fileExists = std.fs.cwd().accessZ("libs/miniaudio.h", .{}) catch {};
-    const miniaudio = if (fileExists == {}) b: {
-        break :b b.addSystemCommand(&.{});
-    } else b: {
-        const step = b.addSystemCommand(&.{
+    var miniaudio = b.addSystemCommand(&.{"true"});
+    std.fs.cwd().accessZ("libs/miniaudio.h", .{}) catch {
+        miniaudio = b.addSystemCommand(&.{
             "curl",
             "-o",
             "libs/miniaudio.h",
@@ -17,9 +15,7 @@ pub fn build(b: *std.Build) !void {
             "https://raw.githubusercontent.com/mackron/miniaudio/master/miniaudio.h",
             "--create-dirs",
         });
-        break :b step;
     };
-
     const raylib_dep = b.dependency("raylib-zig", .{
         .target = target,
         .optimize = optimize,

@@ -42,8 +42,8 @@ pub fn drawServerGroup(config: DrawConfig) void {
     // Nickname input
     _ = rg.guiLabel(label_bounds, "Nickname:");
     const nickname_hover = InputBox.handleInputBox(.{
-        .buffer = &state.nickname_buf,
-        .len = &state.nickname_len,
+        .buffer = state.nickname_buf,
+        .len = &state.nickname_len.*,
         .is_editing = &state.nickname_edit,
         .bounds = text_bounds,
     });

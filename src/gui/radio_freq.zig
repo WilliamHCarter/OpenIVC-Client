@@ -3,8 +3,8 @@ const rg = @import("raygui");
 const InputBox = @import("ui_inputbox.zig");
 
 pub const RadioState = struct {
-    uhf_freq: [32]u8 = [_]u8{32} ** 32,
-    vhf_freq: [32]u8 = [_]u8{32} ** 32,
+    uhf_freq: [128]u8 = [_]u8{128} ** 128,
+    vhf_freq: [128]u8 = [_]u8{128} ** 128,
     uhf_freq_len: usize = 0,
     vhf_freq_len: usize = 0,
     uhf_edit: bool = false,
@@ -55,7 +55,7 @@ pub fn drawRadioGroup(config: DrawConfig) void {
     // UHF Row
     _ = rg.guiLabel(.{ .x = config.base_x, .y = current_y, .width = config.freq_width, .height = config.element_height }, "UHF Freq:");
     const uhf_hover = InputBox.handleInputBox(.{
-        .buffer = &state.uhf_freq,
+        .buffer = state.uhf_freq,
         .len = &state.uhf_freq_len,
         .is_editing = &state.uhf_edit,
         .bounds = textbox_bounds,
