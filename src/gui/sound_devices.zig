@@ -1,12 +1,7 @@
+const std = @import("std");
 const rl = @import("raylib");
 const rg = @import("raygui");
-
-pub const SoundState = struct {
-    capture_device_index: i32 = 0,
-    playback_device_index: i32 = 0,
-    input_dropdown_open: bool = false,
-    output_dropdown_open: bool = false,
-};
+const SoundState = @import("../sound_state.zig").SoundState;
 
 pub const DrawConfig = struct {
     base_x: f32,
@@ -18,9 +13,21 @@ pub const DrawConfig = struct {
     scale: f32,
 };
 
-// Returns the final Y position after drawing
-pub fn drawSoundGroup(config: DrawConfig) void {
-    const state = SoundState{};
+fn buildDeviceList(devices: []const SoundState.SoundDevice, allocator: std.mem.Allocator) ![]const u8 {
+    var list = std.ArrayList(u8).init(allocator);
+    defer list.deinit();
+
+    for (devices, 0..) |device, i| {
+        try list.appendSlice(device.name);
+        if (i < devices.len - 1) {
+            try list.append(';');
+        }
+    }
+
+    return try list.toOwnedSlice();
+}
+
+pub fn drawSoundGroup(config: DrawConfig, sound_state: *SoundState) !void {
     var current_y = config.start_y;
 
     // Draw the group box
@@ -31,11 +38,21 @@ pub fn drawSoundGroup(config: DrawConfig) void {
         .height = 100.0 * config.scale,
     }, "Sound Devices");
 
-    current_y += 20.0 * config.scale; // Group padding
+    current_y += 20.0 * config.scale;
 
     // Capture device section
     var label_bounds = rl.Rectangle.init(config.base_x, current_y, config.label_width, config.element_height);
     _ = rg.guiLabel(label_bounds, "Capture:");
+
+    // Build device lists
+    const capture_list = try buildDeviceList(sound_state.capture_devices, sound_state.allocator);
+    defer sound_state.allocator.free(capture_list);
+    const playback_list = try buildDeviceList(sound_state.playback_devices, sound_state.allocator);
+    defer sound_state.allocator.free(playback_list);
+
+    // Convert selection indices for GUI
+    var selected_capture = sound_state.selected_capture;
+    var selected_playback = sound_state.selected_playback;
 
     // Capture dropdown
     const input_dropdown_bounds = rl.Rectangle{
@@ -46,9 +63,14 @@ pub fn drawSoundGroup(config: DrawConfig) void {
     };
 
     // Draw the capture dropdown and handle click
-    const in_res = rg.guiDropdownBox(input_dropdown_bounds, "Analogue 1+2;USB Device 1;Default Input", &state.capture_device_index, state.input_dropdown_open);
+    const in_res = rg.guiDropdownBox(input_dropdown_bounds, capture_list.ptr, &selected_capture, sound_state.ui_state.input_dropdown_open);
+
     if (in_res == 1) {
-        state.input_dropdown_open = !state.input_dropdown_open;
+        sound_state.ui_state.input_dropdown_open = !sound_state.ui_state.input_dropdown_open;
+        if (!sound_state.ui_state.input_dropdown_open) {
+            sound_state.selected_capture = selected_capture;
+            try sound_state.updateCaptureDevice();
+        }
     }
 
     // Playback device section
@@ -64,8 +86,24 @@ pub fn drawSoundGroup(config: DrawConfig) void {
     };
 
     // Draw the playback dropdown and handle click
-    const out_res = rg.guiDropdownBox(output_dropdown_bounds, "Default Output;Speakers;Headphones", &state.playback_device_index, state.output_dropdown_open);
+    const out_res = rg.guiDropdownBox(output_dropdown_bounds, playback_list.ptr, &selected_playback, sound_state.ui_state.output_dropdown_open);
+
     if (out_res == 1) {
-        state.output_dropdown_open = !state.output_dropdown_open;
+        sound_state.ui_state.output_dropdown_open = !sound_state.ui_state.output_dropdown_open;
+        if (!sound_state.ui_state.output_dropdown_open) {
+            sound_state.selected_playback = selected_playback;
+            try sound_state.updatePlaybackDevice();
+        }
+    }
+
+    // Close dropdowns when clicking outside
+    if (rl.isMouseButtonPressed(rl.MouseButton.left)) {
+        const mouse_pos = rl.getMousePosition();
+        if (!rl.checkCollisionPointRec(mouse_pos, input_dropdown_bounds) and
+            !rl.checkCollisionPointRec(mouse_pos, output_dropdown_bounds))
+        {
+            sound_state.ui_state.input_dropdown_open = false;
+            sound_state.ui_state.output_dropdown_open = false;
+        }
     }
 }
