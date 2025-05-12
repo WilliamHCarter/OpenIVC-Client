@@ -1,10 +1,12 @@
 .{
-    .name = "OpenIVC-Client",
+    .name = .OpenIVCClient,
+    .fingerprint = 0xbadf0d68cb4ac512,
     .version = "0.0.1",
+    .minimum_zig_version = "0.14.0",
     .dependencies = .{
         .@"raylib-zig" = .{
             .url = "https://github.com/Not-Nik/raylib-zig/archive/devel.tar.gz",
-            .hash = "122081321a9b6653f90fee325553c9f64934f94b789e7ddbadf27f754a5e42537c4d",
+            .hash = "122010ba07c23a361855114e8bb89a1092b510c0dc454abc00e9b603b27250e515cc",
         },
     },
     .paths = .{""},
