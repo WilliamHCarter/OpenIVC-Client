@@ -3,6 +3,7 @@ const rg = @import("raygui");
 const std = @import("std");
 const ServerConnection = @import("gui/server_connection.zig");
 const SoundDevices = @import("gui/sound_devices.zig");
+const SoundState = @import("./sound_state.zig").SoundState;
 const RadioFreq = @import("gui/radio_freq.zig");
 
 // Define available themes
@@ -153,5 +154,6 @@ pub fn drawGui(state: *GuiState) void {
         .margin = margin,
         .scale = scale,
     };
-    SoundDevices.drawSoundGroup(sound_config);
+    const sound_state = try SoundState.init(std.heap.page_allocator);
+    try SoundDevices.drawSoundGroup(sound_state, sound_config);
 }

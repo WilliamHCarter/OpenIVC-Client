@@ -2,7 +2,7 @@ const std = @import("std");
 const rl = @import("raylib");
 const rg = @import("raygui");
 const SoundState = @import("../sound_state.zig").SoundState;
-
+const SoundDevice = @import("../sound_state.zig").SoundDevice;
 pub const DrawConfig = struct {
     base_x: f32,
     start_y: f32,
@@ -13,7 +13,7 @@ pub const DrawConfig = struct {
     scale: f32,
 };
 
-fn buildDeviceList(devices: []const SoundState.SoundDevice, allocator: std.mem.Allocator) ![]const u8 {
+fn buildDeviceList(devices: []const SoundDevice, allocator: std.mem.Allocator) ![]const u8 {
     var list = std.ArrayList(u8).init(allocator);
     defer list.deinit();
 
@@ -27,7 +27,7 @@ fn buildDeviceList(devices: []const SoundState.SoundDevice, allocator: std.mem.A
     return try list.toOwnedSlice();
 }
 
-pub fn drawSoundGroup(config: DrawConfig, sound_state: *SoundState) !void {
+pub fn drawSoundGroup(sound_state: *SoundState, config: DrawConfig) !void {
     var current_y = config.start_y;
 
     // Draw the group box
