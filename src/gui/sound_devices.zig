@@ -13,7 +13,7 @@ pub const DrawConfig = struct {
     scale: f32,
 };
 
-fn buildDeviceList(devices: []const SoundDevice, allocator: std.mem.Allocator) ![]const u8 {
+fn buildDeviceList(devices: []const SoundDevice, allocator: std.mem.Allocator) ![:0]const u8 {
     var list = std.ArrayList(u8).init(allocator);
     defer list.deinit();
 
@@ -24,7 +24,9 @@ fn buildDeviceList(devices: []const SoundDevice, allocator: std.mem.Allocator) !
         }
     }
 
-    return try list.toOwnedSlice();
+    try list.append(0);
+    const result = try list.toOwnedSlice();
+    return result[0 .. result.len - 1 :0];
 }
 
 pub fn drawSoundGroup(sound_state: *SoundState, config: DrawConfig) !void {
@@ -51,8 +53,8 @@ pub fn drawSoundGroup(sound_state: *SoundState, config: DrawConfig) !void {
     defer sound_state.allocator.free(playback_list);
 
     // Convert selection indices for GUI
-    var selected_capture = sound_state.selected_capture;
-    var selected_playback = sound_state.selected_playback;
+    var selected_capture = @as(i32, @intCast(sound_state.selected_capture));
+    var selected_playback = @as(i32, @intCast(sound_state.selected_playback));
 
     // Capture dropdown
     const input_dropdown_bounds = rl.Rectangle{
@@ -68,7 +70,7 @@ pub fn drawSoundGroup(sound_state: *SoundState, config: DrawConfig) !void {
     if (in_res == 1) {
         sound_state.ui_state.input_dropdown_open = !sound_state.ui_state.input_dropdown_open;
         if (!sound_state.ui_state.input_dropdown_open) {
-            sound_state.selected_capture = selected_capture;
+            sound_state.selected_capture = @intCast(selected_capture);
             try sound_state.updateCaptureDevice();
         }
     }
@@ -91,7 +93,7 @@ pub fn drawSoundGroup(sound_state: *SoundState, config: DrawConfig) !void {
     if (out_res == 1) {
         sound_state.ui_state.output_dropdown_open = !sound_state.ui_state.output_dropdown_open;
         if (!sound_state.ui_state.output_dropdown_open) {
-            sound_state.selected_playback = selected_playback;
+            sound_state.selected_playback = @intCast(selected_playback);
             try sound_state.updatePlaybackDevice();
         }
     }

@@ -29,10 +29,14 @@ pub const SoundState = struct {
             return error.ContextInitFailed;
         }
 
+        // Initialize devices using the already-initialized context
+        const capture_devs = try initDevices(allocator, &self.context, true);
+        const playback_devs = try initDevices(allocator, &self.context, false);
+
         self.* = .{
-            .context = undefined,
-            .capture_devices = try initDevices(allocator, &self.context, true),
-            .playback_devices = try initDevices(allocator, &self.context, false),
+            .context = self.context, // Keep the initialized context
+            .capture_devices = capture_devs,
+            .playback_devices = playback_devs,
             .selected_capture = 0,
             .selected_playback = 0,
             .ui_state = .{},
@@ -44,7 +48,7 @@ pub const SoundState = struct {
 
     fn initDevices(allocator: std.mem.Allocator, context: *c.ma_context, is_capture: bool) ![]SoundDevice {
         var count: c.ma_uint32 = undefined;
-        var raw_devices: []*c.ma_device_info = undefined;
+        var raw_devices: [*c]c.ma_device_info = undefined;
 
         // Get device count and info
         if (is_capture) {
@@ -54,10 +58,12 @@ pub const SoundState = struct {
         }
 
         var devices = try allocator.alloc(SoundDevice, count);
-        for (raw_devices, 0..count) |device, i| {
+        for (0..count) |i| {
+            const name_ptr: [*:0]const u8 = @ptrCast(&raw_devices[i].name);
+
             devices[i] = .{
-                .name = std.mem.span(@as([*:0]const u8, &device.name)),
-                .info = device.*,
+                .name = std.mem.span(name_ptr),
+                .info = raw_devices[i],
             };
         }
         return devices;
@@ -68,5 +74,15 @@ pub const SoundState = struct {
         self.allocator.free(self.playback_devices);
         _ = c.ma_context_uninit(&self.context);
         self.allocator.destroy(self);
+    }
+
+    pub fn updateCaptureDevice(self: *SoundState) !void {
+        // TODO: Implement actual device switching logic
+        std.debug.print("Selected capture device: {s}\n", .{self.capture_devices[self.selected_capture].name});
+    }
+
+    pub fn updatePlaybackDevice(self: *SoundState) !void {
+        // TODO: Implement actual device switching logic
+        std.debug.print("Selected playback device: {s}\n", .{self.playback_devices[self.selected_playback].name});
     }
 };

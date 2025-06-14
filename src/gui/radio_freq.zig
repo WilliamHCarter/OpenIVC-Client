@@ -3,8 +3,8 @@ const rg = @import("raygui");
 const InputBox = @import("ui_inputbox.zig");
 
 pub const RadioState = struct {
-    uhf_freq: [128]u8 = [_]u8{128} ** 128,
-    vhf_freq: [128]u8 = [_]u8{128} ** 128,
+    uhf_freq: [128]u8 = [_]u8{0} ** 128,
+    vhf_freq: [128]u8 = [_]u8{0} ** 128,
     uhf_freq_len: usize = 0,
     vhf_freq_len: usize = 0,
     uhf_edit: bool = false,
@@ -30,8 +30,7 @@ pub const DrawConfig = struct {
     scale: f32,
 };
 
-pub fn drawRadioGroup(config: DrawConfig) void {
-    const state = RadioState{};
+pub fn drawRadioGroup(state: *RadioState, config: DrawConfig) void {
     var current_y = config.start_y;
     var textbox_bounds = rl.Rectangle.init(config.base_x + config.freq_width, current_y, 1.6 * config.freq_width, config.element_height);
     var button_bounds = rl.Rectangle.init(textbox_bounds.x + (1.6 * config.freq_width) + config.margin, current_y, config.button_width, config.element_height);
@@ -55,7 +54,7 @@ pub fn drawRadioGroup(config: DrawConfig) void {
     // UHF Row
     _ = rg.guiLabel(.{ .x = config.base_x, .y = current_y, .width = config.freq_width, .height = config.element_height }, "UHF Freq:");
     const uhf_hover = InputBox.handleInputBox(.{
-        .buffer = state.uhf_freq,
+        .buffer = &state.uhf_freq,
         .len = &state.uhf_freq_len,
         .is_editing = &state.uhf_edit,
         .bounds = textbox_bounds,

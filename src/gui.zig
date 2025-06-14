@@ -23,16 +23,29 @@ pub const GuiState = struct {
     theme_dropdown_open: bool,
     screen_width: i32,
     screen_height: i32,
+    server_state: ServerConnection.ServerState,
+    radio_state: RadioFreq.RadioState,
+    sound_state: *SoundState,
+    allocator: std.mem.Allocator,
 
-    pub fn init() GuiState {
-        const state = GuiState{
+    pub fn init(allocator: std.mem.Allocator) !GuiState {
+        const sound_state = try SoundState.init(allocator);
+
+        return GuiState{
             .theme_index = 5,
             .previous_theme_index = -1,
             .theme_dropdown_open = false,
             .screen_width = 800,
             .screen_height = 500,
+            .server_state = ServerConnection.ServerState{},
+            .radio_state = RadioFreq.RadioState{},
+            .sound_state = sound_state,
+            .allocator = allocator,
         };
-        return state;
+    }
+
+    pub fn deinit(self: *GuiState) void {
+        self.sound_state.deinit();
     }
 };
 
@@ -61,7 +74,7 @@ pub fn loadTheme(theme: Theme) void {
     }
 }
 
-pub fn drawGui(state: *GuiState) void {
+pub fn drawGui(state: *GuiState) !void {
     const current_width = @as(f32, @floatFromInt(rl.getScreenWidth()));
     const currentHeight = rl.getScreenHeight();
     const scale: f32 = @min((current_width / @as(f32, @floatFromInt(state.screen_width))), @as(f32, @floatFromInt(currentHeight)) / @as(f32, @floatFromInt(state.screen_height)));
@@ -127,7 +140,7 @@ pub fn drawGui(state: *GuiState) void {
         .margin = margin,
         .scale = scale,
     };
-    ServerConnection.drawServerGroup(server_config);
+    ServerConnection.drawServerGroup(&state.server_state, server_config);
     current_y += 120.0 * scale;
 
     // Draw radio frequencies group
@@ -141,7 +154,7 @@ pub fn drawGui(state: *GuiState) void {
         .margin = margin,
         .scale = scale,
     };
-    RadioFreq.drawRadioGroup(radio_config);
+    RadioFreq.drawRadioGroup(&state.radio_state, radio_config);
     current_y += 170.0 * scale;
 
     // Draw sound devices group
@@ -154,6 +167,5 @@ pub fn drawGui(state: *GuiState) void {
         .margin = margin,
         .scale = scale,
     };
-    const sound_state = try SoundState.init(std.heap.page_allocator);
-    try SoundDevices.drawSoundGroup(sound_state, sound_config);
+    try SoundDevices.drawSoundGroup(state.sound_state, sound_config);
 }

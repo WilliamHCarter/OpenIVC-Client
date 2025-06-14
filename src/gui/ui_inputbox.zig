@@ -3,7 +3,7 @@ const rg = @import("raygui");
 const std = @import("std");
 
 pub const InputBoxState = struct {
-    buffer: [128]u8,
+    buffer: *[128]u8,
     len: *usize,
     is_editing: *bool,
     bounds: rl.Rectangle,

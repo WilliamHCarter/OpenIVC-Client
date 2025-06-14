@@ -26,8 +26,7 @@ pub const DrawConfig = struct {
     scale: f32,
 };
 
-pub fn drawServerGroup(config: DrawConfig) void {
-    const state = ServerState{};
+pub fn drawServerGroup(state: *ServerState, config: DrawConfig) void {
     var label_bounds = rl.Rectangle.init(config.base_x, config.start_y, config.group_width, config.element_height);
     var text_bounds = rl.Rectangle.init(config.base_x + config.label_width * 1.4, config.start_y, config.input_width, config.element_height);
 
@@ -42,8 +41,8 @@ pub fn drawServerGroup(config: DrawConfig) void {
     // Nickname input
     _ = rg.guiLabel(label_bounds, "Nickname:");
     const nickname_hover = InputBox.handleInputBox(.{
-        .buffer = state.nickname_buf,
-        .len = &state.nickname_len.*,
+        .buffer = &state.nickname_buf,
+        .len = &state.nickname_len,
         .is_editing = &state.nickname_edit,
         .bounds = text_bounds,
     });
