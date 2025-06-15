@@ -19,6 +19,11 @@ pub const AudioHandler = struct {
     allocator: std.mem.Allocator,
     is_running: bool,
 
+    // Audio level monitoring
+    capture_level: f32,
+    playback_level: f32,
+    level_lock: std.Thread.Mutex,
+
     pub fn init(allocator: std.mem.Allocator, config: AudioConfig) !*AudioHandler {
         const self = try allocator.create(AudioHandler);
         errdefer allocator.destroy(self);
@@ -35,6 +40,9 @@ pub const AudioHandler = struct {
             .buffer_data = buffer_data,
             .allocator = allocator,
             .is_running = false,
+            .capture_level = 0.0,
+            .playback_level = 0.0,
+            .level_lock = .{},
         };
 
         // Initialize ring buffer
@@ -116,6 +124,21 @@ pub const AudioHandler = struct {
         const self = @ptrCast(*AudioHandler, @alignCast(@alignOf(*AudioHandler), device.*.pUserData));
         const bytes_to_write = frameCount * device.*.capture.channels * @sizeOf(f32);
 
+        // Calculate RMS level for capture
+        const samples = @ptrCast([*]const f32, @alignCast(@alignOf(f32), input.?));
+        const sample_count = frameCount * device.*.capture.channels;
+        var sum: f32 = 0.0;
+        var i: usize = 0;
+        while (i < sample_count) : (i += 1) {
+            sum += samples[i] * samples[i];
+        }
+        const rms = @sqrt(sum / @as(f32, @floatFromInt(sample_count)));
+
+        // Update level with simple smoothing
+        self.level_lock.lock();
+        self.capture_level = self.capture_level * 0.9 + rms * 0.1;
+        self.level_lock.unlock();
+
         _ = c.ma_rb_write(&self.ring_buffer, input, bytes_to_write);
     }
 
@@ -130,6 +153,24 @@ pub const AudioHandler = struct {
         const bytes_to_read = frameCount * device.*.playback.channels * @sizeOf(f32);
 
         const bytes_read = c.ma_rb_read(&self.ring_buffer, output, bytes_to_read);
+
+        // Calculate RMS level for playback
+        if (bytes_read > 0) {
+            const samples = @ptrCast([*]const f32, @alignCast(@alignOf(f32), output.?));
+            const sample_count = bytes_read / @sizeOf(f32);
+            var sum: f32 = 0.0;
+            var i: usize = 0;
+            while (i < sample_count) : (i += 1) {
+                sum += samples[i] * samples[i];
+            }
+            const rms = @sqrt(sum / @as(f32, @floatFromInt(sample_count)));
+
+            // Update level with simple smoothing
+            self.level_lock.lock();
+            self.playback_level = self.playback_level * 0.9 + rms * 0.1;
+            self.level_lock.unlock();
+        }
+
         if (bytes_read < bytes_to_read) {
             // Fill remaining buffer with silence if we don't have enough data
             const remaining = @ptrCast([*]u8, @alignCast(@alignOf(u8), output.?)) + bytes_read;
@@ -169,5 +210,22 @@ pub const AudioHandler = struct {
             return error.PlaybackDeviceInitFailed;
         }
         try self.start();
+    }
+
+    // Get current audio levels (0.0 to 1.0)
+    pub fn getLevels(self: *AudioHandler) struct { capture: f32, playback: f32 } {
+        self.level_lock.lock();
+        defer self.level_lock.unlock();
+        return .{
+            .capture = @min(self.capture_level, 1.0),
+            .playback = @min(self.playback_level, 1.0),
+        };
+    }
+
+    // Convert linear level to dB
+    pub fn levelToDb(level: f32) f32 {
+        if (level <= 0.0) return -60.0;
+        const db = 20.0 * @log10(level);
+        return @max(db, -60.0);
     }
 };
