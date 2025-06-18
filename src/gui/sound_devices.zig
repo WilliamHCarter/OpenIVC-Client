@@ -3,6 +3,7 @@ const rl = @import("raylib");
 const rg = @import("raygui");
 const SoundState = @import("../sound_state.zig").SoundState;
 const SoundDevice = @import("../sound_state.zig").SoundDevice;
+const LevelMeter = @import("./level_meter.zig");
 pub const DrawConfig = struct {
     base_x: f32,
     start_y: f32,

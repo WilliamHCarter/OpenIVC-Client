@@ -50,7 +50,6 @@ pub const AudioHandler = struct {
             buffer_size,
             buffer_data.ptr,
             null,
-            null,
             &self.ring_buffer,
         ) != c.MA_SUCCESS) {
             return error.RingBufferInitFailed;
@@ -121,11 +120,11 @@ pub const AudioHandler = struct {
         frameCount: c.ma_uint32,
     ) callconv(.C) void {
         _ = output;
-        const self = @ptrCast(*AudioHandler, @alignCast(@alignOf(*AudioHandler), device.*.pUserData));
-        const bytes_to_write = frameCount * device.*.capture.channels * @sizeOf(f32);
+        const self: *AudioHandler = @ptrCast(@alignCast(device.*.pUserData));
+        const bytes_to_write: usize = frameCount * device.*.capture.channels * @sizeOf(f32);
 
         // Calculate RMS level for capture
-        const samples = @ptrCast([*]const f32, @alignCast(@alignOf(f32), input.?));
+        const samples: [*]const f32 = @ptrCast(@alignCast(input.?));
         const sample_count = frameCount * device.*.capture.channels;
         var sum: f32 = 0.0;
         var i: usize = 0;
@@ -139,7 +138,18 @@ pub const AudioHandler = struct {
         self.capture_level = self.capture_level * 0.9 + rms * 0.1;
         self.level_lock.unlock();
 
-        _ = c.ma_rb_write(&self.ring_buffer, input, bytes_to_write);
+        var write_size = bytes_to_write;
+        var write_buffer: ?*anyopaque = undefined;
+
+        if (c.ma_rb_acquire_write(&self.ring_buffer, &write_size, &write_buffer) == c.MA_SUCCESS) {
+            if (write_size > 0) {
+                // Copy input data to ring buffer
+                const src = @as([*]const u8, @ptrCast(input.?));
+                const dst = @as([*]u8, @ptrCast(write_buffer.?));
+                @memcpy(dst[0..write_size], src[0..write_size]);
+            }
+            _ = c.ma_rb_commit_write(&self.ring_buffer, write_size);
+        }
     }
 
     fn playbackCallback(
@@ -149,32 +159,43 @@ pub const AudioHandler = struct {
         frameCount: c.ma_uint32,
     ) callconv(.C) void {
         _ = input;
-        const self = @ptrCast(*AudioHandler, @alignCast(@alignOf(*AudioHandler), device.*.pUserData));
-        const bytes_to_read = frameCount * device.*.playback.channels * @sizeOf(f32);
+        const self: *AudioHandler = @ptrCast(@alignCast(device.*.pUserData));
+        const bytes_to_read: usize = frameCount * device.*.playback.channels * @sizeOf(f32);
 
-        const bytes_read = c.ma_rb_read(&self.ring_buffer, output, bytes_to_read);
+        var read_size = bytes_to_read;
+        var read_buffer: ?*anyopaque = undefined;
+        var bytes_read: usize = 0;
 
-        // Calculate RMS level for playback
-        if (bytes_read > 0) {
-            const samples = @ptrCast([*]const f32, @alignCast(@alignOf(f32), output.?));
-            const sample_count = bytes_read / @sizeOf(f32);
-            var sum: f32 = 0.0;
-            var i: usize = 0;
-            while (i < sample_count) : (i += 1) {
-                sum += samples[i] * samples[i];
+        if (c.ma_rb_acquire_read(&self.ring_buffer, &read_size, &read_buffer) == c.MA_SUCCESS) {
+            if (read_size > 0) {
+                // Copy from ring buffer to output
+                const src = @as([*]const u8, @ptrCast(read_buffer.?));
+                const dst = @as([*]u8, @ptrCast(output.?));
+                @memcpy(dst[0..read_size], src[0..read_size]);
+                bytes_read = read_size;
+
+                // Calculate RMS level for playback
+                const samples: [*]const f32 = @ptrCast(@alignCast(output.?));
+                const sample_count = read_size / @sizeOf(f32);
+                var sum: f32 = 0.0;
+                var i: usize = 0;
+                while (i < sample_count) : (i += 1) {
+                    sum += samples[i] * samples[i];
+                }
+                const rms = @sqrt(sum / @as(f32, @floatFromInt(sample_count)));
+
+                // Update level with simple smoothing
+                self.level_lock.lock();
+                self.playback_level = self.playback_level * 0.9 + rms * 0.1;
+                self.level_lock.unlock();
             }
-            const rms = @sqrt(sum / @as(f32, @floatFromInt(sample_count)));
-
-            // Update level with simple smoothing
-            self.level_lock.lock();
-            self.playback_level = self.playback_level * 0.9 + rms * 0.1;
-            self.level_lock.unlock();
+            _ = c.ma_rb_commit_read(&self.ring_buffer, read_size);
         }
 
+        // Fill remaining buffer with silence if we don't have enough data
         if (bytes_read < bytes_to_read) {
-            // Fill remaining buffer with silence if we don't have enough data
-            const remaining = @ptrCast([*]u8, @alignCast(@alignOf(u8), output.?)) + bytes_read;
-            @memset(remaining, 0, bytes_to_read - bytes_read);
+            const remaining = @as([*]u8, @ptrCast(output.?)) + bytes_read;
+            @memset(remaining[0 .. bytes_to_read - bytes_read], 0);
         }
     }
 
