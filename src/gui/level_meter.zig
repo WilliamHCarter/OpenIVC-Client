@@ -110,23 +110,15 @@ pub fn drawLevelMeter(
     }
 
     // Border
-    rl.drawRectangleLinesEx(.{
-        .x = meter_x,
-        .y = y,
-        .width = meter_width,
-        .height = height,
-    }, 1, rl.Color.light_gray);
+    const rect_lines: rl.Rectangle = .{ meter_x, y, meter_width, height };
+    rl.drawRectangleLinesEx(rect_lines, 1, rl.Color.light_gray);
 
     // dB value
     if (show_db) {
         const db = AudioHandler.levelToDb(level);
         const db_text = rl.textFormat("%+.1f dB", .{db});
-        _ = rg.guiLabel(.{
-            .x = meter_x + meter_width + 5,
-            .y = y,
-            .width = 55,
-            .height = height,
-        }, db_text);
+        const rect: rl.Rectangle = .{ meter_x + meter_width + 5, y, 55, height };
+        _ = rg.guiLabel(rect, db_text);
     }
 
     // Reference lines at -12dB and -6dB

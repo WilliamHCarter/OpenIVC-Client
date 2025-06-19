@@ -47,7 +47,8 @@ pub const GuiState = struct {
             .server_state = ServerConnection.ServerState{},
             .radio_state = RadioFreq.RadioState{},
             .sound_state = sound_state,
-            .audio_levels_state = AudioLevels.AudioLevelState{},
+            .capture_level_state = LevelMeter,
+            .playback_level_state = LevelMeter,
             .audio_handler = audio_handler,
             .allocator = allocator,
         };
@@ -183,7 +184,7 @@ pub fn drawGui(state: *GuiState) !void {
     current_y += 100.0 * scale;
 
     // Draw audio levels
-    const audio_levels_config = AudioLevels.DrawConfig{
+    const audio_levels_config = LevelMeter.DrawConfig{
         .base_x = @divFloor(current_width - group_width, 2),
         .start_y = current_y,
         .width = group_width,
@@ -191,5 +192,5 @@ pub fn drawGui(state: *GuiState) !void {
         .margin = margin,
         .scale = scale,
     };
-    AudioLevels.drawAudioLevels(&state.audio_levels_state, state.audio_handler, audio_levels_config);
+    LevelMeter.drawAudioLevels(&state.audio_levels_state, state.audio_handler, audio_levels_config);
 }
