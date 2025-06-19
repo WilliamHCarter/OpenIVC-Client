@@ -79,7 +79,6 @@ pub fn drawLevelMeter(
     total_width: i32,
     height: i32,
     label_width: i32,
-    show_db: bool,
 ) void {
     // Draw label
     _ = rg.guiLabel(.{
@@ -90,7 +89,7 @@ pub fn drawLevelMeter(
     }, @ptrCast(label.ptr));
 
     const meter_x = x + label_width;
-    const meter_width = total_width - label_width - 60; // Space for dB value
+    const meter_width = total_width - label_width;
 
     // Background
     rl.drawRectangle(meter_x, y, meter_width, height, rl.Color.dark_gray);
@@ -119,14 +118,6 @@ pub fn drawLevelMeter(
     const rect_lines: rl.Rectangle = .{ .x = @floatFromInt(meter_x), .y = @floatFromInt(y), .width = @floatFromInt(meter_width), .height = @floatFromInt(height) };
     rl.drawRectangleLinesEx(rect_lines, 1, rl.Color.light_gray);
 
-    // dB value
-    if (show_db) {
-        const db = AudioHandler.levelToDb(level);
-        const db_text = rl.textFormat("%+.1f dB", .{db});
-        const rect: rl.Rectangle = .{ .x = @floatFromInt(meter_x + meter_width + 5), .y = @floatFromInt(y), .width = 55, .height = @floatFromInt(height) };
-        _ = rg.guiLabel(rect, db_text);
-    }
-
     // Reference lines at -12dB and -6dB
     const ref_positions = [_]f32{ 0.25, 0.5 }; // -12dB and -6dB approximately
     for (ref_positions) |pos| {
@@ -134,33 +125,4 @@ pub fn drawLevelMeter(
         const l_color = rl.Color{ .r = 100, .g = 100, .b = 100, .a = 100 };
         rl.drawLine(ref_x, y, ref_x, y + height, l_color);
     }
-}
-
-// Simple version for inline use in sound devices
-pub fn drawSimpleLevelMeter(
-    level: f32,
-    x: i32,
-    y: i32,
-    width: i32,
-    height: i32,
-) void {
-    // Background
-    rl.drawRectangle(x, y, width, height, rl.Color.dark_gray);
-
-    // Level bar
-    const bar_width = @as(i32, @intFromFloat(@as(f32, @floatFromInt(width)) * level));
-    if (bar_width > 0) {
-        const color = if (level < 0.5)
-            rl.Color.green
-        else if (level < 0.8)
-            rl.Color.gold
-        else
-            rl.Color.red;
-
-        rl.drawRectangle(x, y, bar_width, height, color);
-    }
-
-    // Border
-    const rect_lines: rl.Rectangle = .{ .x = @floatFromInt(x), .y = @floatFromInt(y), .width = @floatFromInt(width), .height = @floatFromInt(height) };
-    rl.drawRectangleLinesEx(rect_lines, 1, rl.Color.light_gray);
 }

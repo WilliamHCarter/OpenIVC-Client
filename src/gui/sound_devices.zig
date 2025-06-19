@@ -34,9 +34,7 @@ fn buildDeviceList(devices: []const SoundDevice, allocator: std.mem.Allocator) !
 
 pub fn drawSoundGroup(sound_state: *SoundState, capture_level_state: *LevelMeter.LevelMeterState, playback_level_state: *LevelMeter.LevelMeterState, audio_handler: ?*AudioHandler, config: DrawConfig) !void {
     var current_y = config.start_y;
-
-    // Increased height to accommodate level meters
-    const group_height = 160.0 * config.scale;
+    const group_height = 120.0 * config.scale;
 
     // Draw the group box
     _ = rg.guiGroupBox(.{
@@ -122,16 +120,14 @@ pub fn drawSoundGroup(sound_state: *SoundState, capture_level_state: *LevelMeter
     const levels = if (audio_handler) |handler| handler.getLevels() else null;
     const capture_level: f32 = if (levels) |l| l.capture else 0.0;
     const playback_level: f32 = if (levels) |l| l.playback else 0.0;
-
     // Update level states
     LevelMeter.updateLevel(capture_level_state, capture_level);
     LevelMeter.updateLevel(playback_level_state, playback_level);
 
     // Draw capture level meter
     const meter_height = @as(i32, @intFromFloat(20.0 * config.scale));
-    const meter_width = @as(i32, @intFromFloat((config.group_width / 2) - (config.margin * 4)));
+    const meter_width = @as(i32, @intFromFloat((config.group_width / 2) - (config.margin * 3)));
     const label_width = @as(i32, @intFromFloat(60.0 * config.scale));
-    //const db_width = if (capture_level_state.show_db_scale) 60 else 0;
 
     LevelMeter.drawLevelMeter(
         "Input:",
@@ -142,7 +138,6 @@ pub fn drawSoundGroup(sound_state: *SoundState, capture_level_state: *LevelMeter
         meter_width,
         meter_height,
         label_width,
-        capture_level_state.show_db_scale,
     );
 
     // Draw playback level meter
@@ -155,18 +150,5 @@ pub fn drawSoundGroup(sound_state: *SoundState, capture_level_state: *LevelMeter
         meter_width,
         meter_height,
         label_width,
-        playback_level_state.show_db_scale,
     );
-
-    // Show dB scale checkbox (shared for both meters)
-    current_y += @as(f32, @floatFromInt(meter_height)) + config.margin;
-    _ = rg.guiCheckBox(.{
-        .x = config.base_x,
-        .y = current_y,
-        .width = 20.0 * config.scale,
-        .height = 20.0 * config.scale,
-    }, "Show dB scale", &capture_level_state.show_db_scale);
-
-    // Sync the show_db_scale setting between both meters
-    playback_level_state.show_db_scale = capture_level_state.show_db_scale;
 }

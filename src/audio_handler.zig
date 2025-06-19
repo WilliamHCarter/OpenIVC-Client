@@ -127,15 +127,22 @@ pub const AudioHandler = struct {
         const samples: [*]const f32 = @ptrCast(@alignCast(input.?));
         const sample_count = frameCount * device.*.capture.channels;
         var sum: f32 = 0.0;
+        var peak: f32 = 0.0;
         var i: usize = 0;
-        while (i < sample_count) : (i += 1) {
-            sum += samples[i] * samples[i];
-        }
-        const rms = @sqrt(sum / @as(f32, @floatFromInt(sample_count)));
 
-        // Update level with simple smoothing
+        while (i < sample_count) : (i += 1) {
+            const sample = @abs(samples[i]);
+            peak = @max(peak, sample);
+            sum += sample * sample;
+        }
         self.level_lock.lock();
-        self.capture_level = self.capture_level * 0.9 + rms * 0.1;
+
+        if (peak > self.capture_level) {
+            self.capture_level = peak;
+        } else {
+            self.capture_level *= 0.95;
+        }
+
         self.level_lock.unlock();
 
         var write_size = bytes_to_write;
