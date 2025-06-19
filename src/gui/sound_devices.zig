@@ -32,15 +32,11 @@ fn buildDeviceList(devices: []const SoundDevice, allocator: std.mem.Allocator) !
     return result[0 .. result.len - 1 :0];
 }
 
-pub fn drawSoundGroup(
-    sound_state: *SoundState,
-    capture_level_state: *LevelMeter.LevelMeterState,
-    playback_level_state: *LevelMeter.LevelMeterState,
-    audio_handler: ?*AudioHandler,
-    config: DrawConfig,
-) !void {
+pub fn drawSoundGroup(sound_state: *SoundState, capture_level_state: *LevelMeter.LevelMeterState, playback_level_state: *LevelMeter.LevelMeterState, audio_handler: ?*AudioHandler, config: DrawConfig) !void {
     var current_y = config.start_y;
-    const group_height = 180.0 * config.scale; // Increased height for level meters
+
+    // Increased height to accommodate level meters
+    const group_height = 160.0 * config.scale;
 
     // Draw the group box
     _ = rg.guiGroupBox(.{
@@ -120,49 +116,57 @@ pub fn drawSoundGroup(
     }
 
     // Draw level meters
-    current_y += 2 * config.element_height + config.margin * 2;
+    current_y += config.element_height * 2 + config.margin;
 
-    // Update levels from audio handler
-    if (audio_handler) |handler| {
-        const levels = handler.getLevels();
-        LevelMeter.updateLevel(capture_level_state, levels.capture);
-        LevelMeter.updateLevel(playback_level_state, levels.playback);
-    }
+    // Get audio levels from the audio handler
+    const levels = if (audio_handler) |handler| handler.getLevels() else null;
+    const capture_level: f32 = if (levels) |l| l.capture else 0.0;
+    const playback_level: f32 = if (levels) |l| l.playback else 0.0;
 
-    const inner_margin = 10.0 * config.scale;
-    const bar_height = 20.0 * config.scale;
+    // Update level states
+    LevelMeter.updateLevel(capture_level_state, capture_level);
+    LevelMeter.updateLevel(playback_level_state, playback_level);
 
-    // Draw capture meter
-    LevelMeter.drawLevelMeter(capture_level_state, .{
-        .x = config.base_x - config.margin,
-        .y = current_y,
-        .width = config.group_width - inner_margin,
-        .height = bar_height,
-        .label = "Capture:",
-    });
+    // Draw capture level meter
+    const meter_height = @as(i32, @intFromFloat(20.0 * config.scale));
+    const meter_width = @as(i32, @intFromFloat((config.group_width / 2) - (config.margin * 4)));
+    const label_width = @as(i32, @intFromFloat(60.0 * config.scale));
+    //const db_width = if (capture_level_state.show_db_scale) 60 else 0;
 
-    current_y += bar_height + inner_margin;
+    LevelMeter.drawLevelMeter(
+        "Input:",
+        capture_level_state.display_level,
+        capture_level_state.peak_level,
+        @intFromFloat(config.base_x),
+        @intFromFloat(current_y),
+        meter_width,
+        meter_height,
+        label_width,
+        capture_level_state.show_db_scale,
+    );
 
-    // Draw playback meter
-    LevelMeter.drawLevelMeter(playback_level_state, .{
-        .x = config.base_x - config.margin,
-        .y = current_y,
-        .width = config.group_width - inner_margin,
-        .height = bar_height,
-        .label = "Playback:",
-    });
+    // Draw playback level meter
+    LevelMeter.drawLevelMeter(
+        "Output:",
+        playback_level_state.display_level,
+        playback_level_state.peak_level,
+        @intFromFloat(config.base_x + (config.group_width / 2) - config.margin),
+        @intFromFloat(current_y),
+        meter_width,
+        meter_height,
+        label_width,
+        playback_level_state.show_db_scale,
+    );
 
-    // Show dB scale checkbox
-    current_y += bar_height + (15.0 * config.scale);
-    var show_db = capture_level_state.show_db_scale;
+    // Show dB scale checkbox (shared for both meters)
+    current_y += @as(f32, @floatFromInt(meter_height)) + config.margin;
     _ = rg.guiCheckBox(.{
-        .x = config.base_x - config.margin,
+        .x = config.base_x,
         .y = current_y,
         .width = 20.0 * config.scale,
         .height = 20.0 * config.scale,
-    }, "Show dB scale", &show_db);
+    }, "Show dB scale", &capture_level_state.show_db_scale);
 
-    // Apply the setting to both meters
-    capture_level_state.show_db_scale = show_db;
-    playback_level_state.show_db_scale = show_db;
+    // Sync the show_db_scale setting between both meters
+    playback_level_state.show_db_scale = capture_level_state.show_db_scale;
 }
