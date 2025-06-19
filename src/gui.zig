@@ -5,7 +5,7 @@ const ServerConnection = @import("gui/server_connection.zig");
 const SoundDevices = @import("gui/sound_devices.zig");
 const SoundState = @import("./sound_state.zig").SoundState;
 const RadioFreq = @import("gui/radio_freq.zig");
-const LevelMeter = @import("gui/level_meter.zig").LevelMeterState;
+const LevelMeter = @import("gui/level_meter.zig");
 const AudioHandler = @import("audio_handler.zig").AudioHandler;
 
 // Define available themes
@@ -29,6 +29,7 @@ pub const GuiState = struct {
     radio_state: RadioFreq.RadioState,
     sound_state: *SoundState,
     capture_level_state: *LevelMeter.LevelMeterState,
+    playback_level_state: *LevelMeter.LevelMeterState,
     audio_handler: ?*AudioHandler,
     allocator: std.mem.Allocator,
 
@@ -37,6 +38,12 @@ pub const GuiState = struct {
 
         const audio_handler = try AudioHandler.init(allocator, .{});
         try audio_handler.start();
+
+        const capture_level_state = try allocator.create(LevelMeter.LevelMeterState);
+        capture_level_state.* = LevelMeter.LevelMeterState{};
+
+        const playback_level_state = try allocator.create(LevelMeter.LevelMeterState);
+        playback_level_state.* = LevelMeter.LevelMeterState{};
 
         return GuiState{
             .theme_index = 5,
@@ -47,8 +54,8 @@ pub const GuiState = struct {
             .server_state = ServerConnection.ServerState{},
             .radio_state = RadioFreq.RadioState{},
             .sound_state = sound_state,
-            .capture_level_state = LevelMeter,
-            .playback_level_state = LevelMeter,
+            .capture_level_state = capture_level_state,
+            .playback_level_state = playback_level_state,
             .audio_handler = audio_handler,
             .allocator = allocator,
         };
@@ -59,6 +66,8 @@ pub const GuiState = struct {
         if (self.audio_handler) |handler| {
             handler.deinit();
         }
+        self.allocator.destroy(self.capture_level_state);
+        self.allocator.destroy(self.playback_level_state);
     }
 };
 
@@ -180,17 +189,5 @@ pub fn drawGui(state: *GuiState) !void {
         .margin = margin,
         .scale = scale,
     };
-    try SoundDevices.drawSoundGroup(state.sound_state, sound_config);
-    current_y += 100.0 * scale;
-
-    // Draw audio levels
-    const audio_levels_config = LevelMeter.DrawConfig{
-        .base_x = @divFloor(current_width - group_width, 2),
-        .start_y = current_y,
-        .width = group_width,
-        .height = 100.0 * scale,
-        .margin = margin,
-        .scale = scale,
-    };
-    LevelMeter.drawAudioLevels(&state.audio_levels_state, state.audio_handler, audio_levels_config);
+    try SoundDevices.drawSoundGroup(state.sound_state, state.capture_level_state, state.playback_level_state, state.audio_handler, sound_config);
 }

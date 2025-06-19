@@ -4,6 +4,8 @@ const rg = @import("raygui");
 const SoundState = @import("../sound_state.zig").SoundState;
 const SoundDevice = @import("../sound_state.zig").SoundDevice;
 const LevelMeter = @import("./level_meter.zig");
+const AudioHandler = @import("../audio_handler.zig").AudioHandler;
+
 pub const DrawConfig = struct {
     base_x: f32,
     start_y: f32,
@@ -30,15 +32,22 @@ fn buildDeviceList(devices: []const SoundDevice, allocator: std.mem.Allocator) !
     return result[0 .. result.len - 1 :0];
 }
 
-pub fn drawSoundGroup(sound_state: *SoundState, config: DrawConfig) !void {
+pub fn drawSoundGroup(
+    sound_state: *SoundState,
+    capture_level_state: *LevelMeter.LevelMeterState,
+    playback_level_state: *LevelMeter.LevelMeterState,
+    audio_handler: ?*AudioHandler,
+    config: DrawConfig,
+) !void {
     var current_y = config.start_y;
+    const group_height = 180.0 * config.scale; // Increased height for level meters
 
     // Draw the group box
     _ = rg.guiGroupBox(.{
         .x = (@as(f32, @floatFromInt(rl.getScreenWidth())) - config.group_width) / 2,
         .y = current_y,
         .width = config.group_width,
-        .height = 100.0 * config.scale,
+        .height = group_height,
     }, "Sound Devices");
 
     current_y += 20.0 * config.scale;
@@ -109,4 +118,51 @@ pub fn drawSoundGroup(sound_state: *SoundState, config: DrawConfig) !void {
             sound_state.ui_state.output_dropdown_open = false;
         }
     }
+
+    // Draw level meters
+    current_y += 2 * config.element_height + config.margin * 2;
+
+    // Update levels from audio handler
+    if (audio_handler) |handler| {
+        const levels = handler.getLevels();
+        LevelMeter.updateLevel(capture_level_state, levels.capture);
+        LevelMeter.updateLevel(playback_level_state, levels.playback);
+    }
+
+    const inner_margin = 10.0 * config.scale;
+    const bar_height = 20.0 * config.scale;
+
+    // Draw capture meter
+    LevelMeter.drawLevelMeter(capture_level_state, .{
+        .x = config.base_x - config.margin,
+        .y = current_y,
+        .width = config.group_width - inner_margin,
+        .height = bar_height,
+        .label = "Capture:",
+    });
+
+    current_y += bar_height + inner_margin;
+
+    // Draw playback meter
+    LevelMeter.drawLevelMeter(playback_level_state, .{
+        .x = config.base_x - config.margin,
+        .y = current_y,
+        .width = config.group_width - inner_margin,
+        .height = bar_height,
+        .label = "Playback:",
+    });
+
+    // Show dB scale checkbox
+    current_y += bar_height + (15.0 * config.scale);
+    var show_db = capture_level_state.show_db_scale;
+    _ = rg.guiCheckBox(.{
+        .x = config.base_x - config.margin,
+        .y = current_y,
+        .width = 20.0 * config.scale,
+        .height = 20.0 * config.scale,
+    }, "Show dB scale", &show_db);
+
+    // Apply the setting to both meters
+    capture_level_state.show_db_scale = show_db;
+    playback_level_state.show_db_scale = show_db;
 }
