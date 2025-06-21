@@ -104,26 +104,15 @@ pub fn drawRadioGroup(state: *RadioState, config: DrawConfig) void {
     }
 
     // Control Row
-    _ = rg.guiCheckBox(.{
-        .x = config.base_x,
-        .y = current_y,
-        .width = config.element_height,
-        .height = config.element_height,
-    }, "Force Local Control", &state.force_local);
+    const wh = config.element_height;
+    var bounds: rl.Rectangle = .{ config.base_x, current_y, wh, wh };
+    _ = rg.guiCheckBox(bounds, "Force Local Control", &state.force_local);
 
-    _ = rg.guiCheckBox(.{
-        .x = config.base_x + (180.0 * config.scale),
-        .y = current_y,
-        .width = config.element_height,
-        .height = config.element_height,
-    }, "AGC", &state.agc_enabled);
+    bounds.x = config.base_x + (180.0 * config.scale);
+    _ = rg.guiCheckBox(bounds, "AGC", &state.agc_enabled);
 
     _ = rg.guiSlider(slider_bounds, "Intercom Vol:", "", &state.intercom_vol, 0, 10);
 
-    _ = rg.guiCheckBox(.{
-        .x = config.base_x + config.group_width - (175.0 * config.scale),
-        .y = current_y,
-        .width = config.element_height,
-        .height = config.element_height,
-    }, "GUARD Active (F3)", &state.guard_active);
+    bounds.x = config.base_x + config.group_width - (175.0 * config.scale);
+    _ = rg.guiCheckBox(bounds, "GUARD Active (F3)", &state.guard_active);
 }
