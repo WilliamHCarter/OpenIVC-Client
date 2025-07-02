@@ -105,7 +105,7 @@ pub fn drawRadioGroup(state: *RadioState, config: DrawConfig) void {
 
     // Control Row
     const wh = config.element_height;
-    var bounds: rl.Rectangle = .{ config.base_x, current_y, wh, wh };
+    var bounds: rl.Rectangle = rl.Rectangle.init(config.base_x, current_y, wh, wh);
     _ = rg.guiCheckBox(bounds, "Force Local Control", &state.force_local);
 
     bounds.x = config.base_x + (180.0 * config.scale);

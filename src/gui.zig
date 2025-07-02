@@ -150,8 +150,6 @@ pub fn drawGui(state: *GuiState) !void {
     const base_x = @divFloor(current_width - group_width, 2) + group_padding;
     var current_y = margin * 4 + group_padding;
 
-    //const base_config = .{ base_x, current_y, group_width, element_height, label_width, input_width, button_width, margin, scale };
-
     // Draw server connection group
     const server_config = ServerConnection.DrawConfig{
         .base_x = base_x,
