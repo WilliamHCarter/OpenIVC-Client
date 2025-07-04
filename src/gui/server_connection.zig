@@ -60,14 +60,8 @@ pub fn drawServerGroup(state: *ServerState, config: DrawConfig) void {
     });
 
     if (rl.isMouseButtonPressed(rl.MouseButton.left)) {
-        if (nickname_hover) {
-            state.server_ip_edit = false;
-        } else if (server_ip_hover) {
-            state.nickname_edit = false;
-        } else {
-            state.nickname_edit = false;
-            state.server_ip_edit = false;
-        }
+        state.nickname_edit = nickname_hover;
+        state.server_ip_edit = server_ip_hover;
     }
 
     if (!nickname_hover and !server_ip_hover) {
