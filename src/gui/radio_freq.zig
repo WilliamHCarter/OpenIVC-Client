@@ -79,14 +79,8 @@ pub fn drawRadioGroup(state: *RadioState, config: DrawConfig) void {
 
     // Handle mutual exclusion of editing states
     if (rl.isMouseButtonPressed(rl.MouseButton.left)) {
-        if (uhf_hover) {
-            state.vhf_edit = false;
-        } else if (vhf_hover) {
-            state.uhf_edit = false;
-        } else {
-            state.uhf_edit = false;
-            state.vhf_edit = false;
-        }
+        state.uhf_edit = uhf_hover;
+        state.vhf_edit = vhf_hover;
     }
 
     // Reset cursor if not hovering over any input
